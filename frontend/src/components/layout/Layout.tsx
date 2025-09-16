@@ -18,7 +18,7 @@ export const Layout: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-secondary-900">
       {/* Mobile menu overlay */}
       <AnimatePresence>
         {sidebarOpen && (
@@ -46,7 +46,7 @@ export const Layout: React.FC = () => {
       </div>
 
       {/* Main content */}
-      <div className={`flex flex-col lg:pl-${sidebarCollapsed ? '16' : '64'} transition-all duration-300`}>
+      <div className={`flex flex-col transition-all duration-300 ${sidebarCollapsed ? 'lg:pl-16' : 'lg:pl-64'}`}>
         {/* Header */}
         <Header onToggleSidebar={toggleSidebar} />
         
