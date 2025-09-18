@@ -29,8 +29,9 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           <input
             type={type}
             className={cn(
-              'flex h-10 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400',
+              'flex h-10 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 text-gray-900',
               'focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20',
+              'dark:bg-secondary-800 dark:border-secondary-700 dark:text-secondary-100 dark:placeholder:text-secondary-400',
               'disabled:cursor-not-allowed disabled:opacity-50',
               'file:border-0 file:bg-transparent file:text-sm file:font-medium',
               error && 'border-red-500 focus:border-red-500 focus:ring-red-500/20',

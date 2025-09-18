@@ -27,6 +27,14 @@
   select:focus {
     @apply ring-2 ring-primary-500 border-primary-500;
   }
+
+  input, textarea, select {
+    @apply text-secondary-900;
+  }
+
+  .dark input, .dark textarea, .dark select {
+    @apply bg-secondary-800 text-secondary-100 placeholder-secondary-400 border-secondary-700;
+  }
 }
 
 @layer components {
