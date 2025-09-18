@@ -75,6 +75,7 @@ router.get('/:id', protect, async (req, res) => {
 
     // Send questions, optionally shuffled
     const shuffled = quiz.getShuffledQuestions();
+    const includeReview = req.query.review === '1' || req.query.review === 'true';
     res.json({ success: true, message: 'Quiz fetched', data: {
       _id: quiz._id,
       title: quiz.title,
@@ -86,8 +87,9 @@ router.get('/:id', protect, async (req, res) => {
         _id: q._id,
         type: q.type,
         question: q.question,
-        options: q.options?.map(o => ({ text: o.text })), // don't leak correctness
+        options: q.options?.map(o => includeReview ? { text: o.text, isCorrect: o.isCorrect } : { text: o.text }),
         points: q.points,
+        explanation: includeReview ? q.explanation : undefined,
       }))
     }});
   } catch (e) {

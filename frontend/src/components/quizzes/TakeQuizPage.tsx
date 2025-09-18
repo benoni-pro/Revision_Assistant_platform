@@ -61,6 +61,19 @@ export const TakeQuizPage: React.FC = () => {
         <div className="card p-6">
           <p className="text-lg font-semibold">Score: {Math.round(result.percentage)}%</p>
           <p className="text-sm text-gray-600">Correct: {result.correctAnswers}/{result.totalQuestions}</p>
+          <div className="mt-4 space-y-3">
+            {quiz.questions.map((q, i) => (
+              <div key={q._id} className="border rounded p-3">
+                <div className="font-medium mb-1">{i + 1}. {q.question}</div>
+                {q.options && q.options.map((opt, oi) => (
+                  <div key={oi} className="text-sm flex items-center gap-2">
+                    <span className={`${(opt as any).isCorrect ? 'text-green-600' : ''}`}>{opt.text}</span>
+                  </div>
+                ))}
+                {q.explanation && <div className="text-sm text-gray-600 mt-2">Explanation: {q.explanation}</div>}
+              </div>
+            ))}
+          </div>
           <Button className="mt-4" onClick={() => navigate('/quizzes')}>Back to Quizzes</Button>
         </div>
       </div>
@@ -84,7 +97,7 @@ export const TakeQuizPage: React.FC = () => {
           {quiz.questions.map((q, idx) => (
             <div key={q._id} className="card p-4">
               <div className="font-medium mb-2">{idx + 1}. {q.question}</div>
-              {q.options && (
+              {q.options ? (
                 <div className="space-y-2">
                   {q.options.map((opt, oi) => {
                     const idOpt = `${q._id}-${oi}`;
@@ -102,6 +115,13 @@ export const TakeQuizPage: React.FC = () => {
                     );
                   })}
                 </div>
+              ) : (
+                <input
+                  className="form-input"
+                  placeholder="Your answer"
+                  value={answers[q._id] || ''}
+                  onChange={(e) => setAnswers((prev) => ({ ...prev, [q._id]: e.target.value }))}
+                />
               )}
             </div>
           ))}

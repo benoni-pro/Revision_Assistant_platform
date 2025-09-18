@@ -12,6 +12,7 @@ import {
 import { useAuth } from '../../contexts/AuthContext';
 import { Button } from '../ui/Button';
 import ThemeToggle from '../ui/ThemeToggle';
+import { usePresence } from '../../contexts/PresenceContext';
 
 interface HeaderProps {
   onToggleSidebar: () => void;
@@ -20,6 +21,7 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const { user, logout } = useAuth();
+  const { onlineUsers } = usePresence();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -92,7 +94,7 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
           {/* User menu */}
           <Menu as="div" className="relative">
             <Menu.Button className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50 transition-colors">
-              <div className="flex-shrink-0 w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
+              <div className="relative flex-shrink-0 w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
                 {user?.avatar ? (
                   <img
                     src={user.avatar}
@@ -103,6 +105,9 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
                   <span className="text-primary-600 font-semibold text-sm">
                     {user?.firstName?.charAt(0)}{user?.lastName?.charAt(0)}
                   </span>
+                )}
+                {user && onlineUsers[user.id] && (
+                  <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-green-500 ring-2 ring-white" />
                 )}
               </div>
               <div className="hidden md:block text-left">
