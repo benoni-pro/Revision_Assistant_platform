@@ -124,21 +124,38 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       dispatch({ type: 'AUTH_START' });
 
-      if (!tokenManager.isAuthenticated()) {
-        // Check if user data exists in localStorage
-        const savedUser = localStorage.getItem('user');
-        if (savedUser) {
-          const user = JSON.parse(savedUser);
-          dispatch({ type: 'AUTH_SUCCESS', payload: user });
-        } else {
-          dispatch({ type: 'AUTH_FAILURE', payload: '' });
-        }
+      // If we have an access token, try to fetch current user
+      if (tokenManager.isAuthenticated()) {
+        const user = await AuthService.getCurrentUser();
+        dispatch({ type: 'AUTH_SUCCESS', payload: user });
         return;
       }
 
-      // Fetch current user data from API
-      const user = await AuthService.getCurrentUser();
-      dispatch({ type: 'AUTH_SUCCESS', payload: user });
+      // No access token: attempt refresh if a refresh token exists
+      const savedRefresh = tokenManager.getRefreshToken();
+      if (savedRefresh) {
+        try {
+          const refreshed = await AuthService.refreshToken(savedRefresh);
+          if (refreshed?.data?.accessToken && refreshed?.data?.refreshToken) {
+            const { accessToken, refreshToken } = refreshed.data;
+            tokenManager.setTokens(accessToken, refreshToken);
+            const user = await AuthService.getCurrentUser();
+            dispatch({ type: 'AUTH_SUCCESS', payload: user });
+            return;
+          }
+        } catch (e) {
+          // fall through to localStorage user or failure
+        }
+      }
+
+      // As a last resort, hydrate from saved user (non-authoritative)
+      const savedUser = localStorage.getItem('user');
+      if (savedUser) {
+        const user = JSON.parse(savedUser);
+        dispatch({ type: 'AUTH_SUCCESS', payload: user });
+      } else {
+        dispatch({ type: 'AUTH_FAILURE', payload: '' });
+      }
     } catch (error) {
       tokenManager.clearTokens();
       dispatch({ type: 'AUTH_FAILURE', payload: '' });
