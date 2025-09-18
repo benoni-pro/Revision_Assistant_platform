@@ -5,6 +5,8 @@ import { Link } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Layout from './components/layout/Layout';
 import Login from './components/auth/Login';
+import Register from './components/auth/Register';
+import VerifyEmail from './components/auth/VerifyEmail';
 import Dashboard from './components/dashboard/Dashboard';
 
 // Protected Route component
@@ -263,7 +265,16 @@ function App() {
               path="/register"
               element={
                 <PublicRoute>
-                  <div className="p-8 text-center">Register Page - Coming Soon!</div>
+                  <Register />
+                </PublicRoute>
+              }
+            />
+
+            <Route
+              path="/verify-email"
+              element={
+                <PublicRoute>
+                  <VerifyEmail />
                 </PublicRoute>
               }
             />

@@ -140,8 +140,13 @@ export const Dashboard: React.FC = () => {
                 <p className="text-2xl font-bold text-gray-900 mt-1">{stat.value}</p>
                 <p className="text-xs text-gray-500 mt-1">{stat.target}</p>
               </div>
-              <div className={`p-3 rounded-lg bg-${stat.color}-50`}>
-                <stat.icon className={`h-6 w-6 text-${stat.color}-600`} />
+              <div className={`p-3 rounded-lg ${
+                stat.color === 'blue' ? 'bg-blue-50 text-blue-600' :
+                stat.color === 'orange' ? 'bg-orange-50 text-orange-600' :
+                stat.color === 'green' ? 'bg-green-50 text-green-600' :
+                'bg-purple-50 text-purple-600'
+              }`}>
+                <stat.icon className={'h-6 w-6'} />
               </div>
             </div>
             {stat.progress !== undefined && (
@@ -152,7 +157,12 @@ export const Dashboard: React.FC = () => {
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
                   <div
-                    className={`bg-${stat.color}-600 h-2 rounded-full transition-all duration-300`}
+                    className={`h-2 rounded-full transition-all duration-300 ${
+                      stat.color === 'blue' ? 'bg-blue-600' :
+                      stat.color === 'orange' ? 'bg-orange-600' :
+                      stat.color === 'green' ? 'bg-green-600' :
+                      'bg-purple-600'
+                    }`}
                     style={{ width: `${Math.min(stat.progress, 100)}%` }}
                   />
                 </div>
