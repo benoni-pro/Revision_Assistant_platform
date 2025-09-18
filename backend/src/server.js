@@ -18,6 +18,7 @@ import quizRoutes from './routes/quizRoutes.js';
 import progressRoutes from './routes/progressRoutes.js';
 import aiRoutes from './routes/aiRoutes.js';
 import resourceRoutes from './routes/resourceRoutes.js';
+import rubricRoutes from './routes/rubricRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 import { setupSocketIO } from './config/socket.js';
 
@@ -100,6 +101,7 @@ app.use('/api/quizzes', quizRoutes);
 app.use('/api/progress', progressRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/resources', resourceRoutes);
+app.use('/api/rubrics', rubricRoutes);
 app.use('/api/notifications', notificationRoutes);
 
 // Error Middleware

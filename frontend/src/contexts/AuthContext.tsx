@@ -172,6 +172,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const { accessToken, refreshToken, user } = response.data;
         tokenManager.setTokens(accessToken, refreshToken);
         dispatch({ type: 'AUTH_SUCCESS', payload: user });
+        // Role-based redirect suggestion
+        if (user.role === 'teacher' || user.role === 'manager' || user.role === 'admin') {
+          window.location.replace('/teacher');
+        } else {
+          window.location.replace('/dashboard');
+        }
       } else {
         throw new Error(response.message || 'Login failed');
       }
@@ -192,6 +198,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const { accessToken, refreshToken, user } = response.data;
         tokenManager.setTokens(accessToken, refreshToken);
         dispatch({ type: 'AUTH_SUCCESS', payload: user });
+        if (user.role === 'teacher' || user.role === 'manager' || user.role === 'admin') {
+          window.location.replace('/teacher');
+        } else {
+          window.location.replace('/dashboard');
+        }
       } else {
         throw new Error(response.message || 'Registration failed');
       }

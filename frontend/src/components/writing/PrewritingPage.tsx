@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
 import aiService from '../../services/aiService';
+import rubricService, { Rubric } from '../../services/rubricService';
 import { Button } from '../ui/Button';
 
 export const PrewritingPage: React.FC = () => {
   const [topic, setTopic] = useState('');
   const [outline, setOutline] = useState<any>(null);
   const [prompts, setPrompts] = useState<string[]>([]);
+  const [rubrics, setRubrics] = useState<Rubric[]>([]);
+  const [selectedRubricId, setSelectedRubricId] = useState<string>('');
   const [loading, setLoading] = useState(false);
 
   const generateOutline = async () => {
@@ -19,6 +22,7 @@ export const PrewritingPage: React.FC = () => {
   const loadPrompts = async (genre: string) => {
     const data = await aiService.prompts(genre);
     setPrompts(data.prompts || []);
+    setRubrics(await rubricService.list(genre));
   };
 
   return (
@@ -47,6 +51,13 @@ export const PrewritingPage: React.FC = () => {
           <ul className="list-disc pl-5 text-sm text-gray-700 space-y-1">
             {prompts.map((p, i) => (<li key={i}>{p}</li>))}
           </ul>
+          <div className="mt-3">
+            <label className="form-label">Select Rubric</label>
+            <select className="form-select" value={selectedRubricId} onChange={(e) => setSelectedRubricId(e.target.value)}>
+              <option value="">None</option>
+              {rubrics.map((r) => (<option key={r._id} value={r._id}>{r.title}</option>))}
+            </select>
+          </div>
         </div>
         <div className="card p-6">
           <h3 className="font-medium mb-2">Outline</h3>

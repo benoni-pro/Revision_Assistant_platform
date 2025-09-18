@@ -17,6 +17,7 @@ import PrewritingPage from './components/writing/PrewritingPage';
 import OutlinePage from './components/writing/OutlinePage';
 import DraftPage from './components/writing/DraftPage';
 import TeacherDashboard from './components/teacher/TeacherDashboard';
+import RubricsPage from './components/teacher/RubricsPage';
 
 // Protected Route component
 interface ProtectedRouteProps {
@@ -379,6 +380,7 @@ function App() {
               }
             >
               <Route index element={<TeacherDashboard />} />
+              <Route path="rubrics" element={<RubricsPage />} />
             </Route>
             
             <Route
