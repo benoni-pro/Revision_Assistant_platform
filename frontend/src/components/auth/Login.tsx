@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { EyeIcon, EyeSlashIcon, EnvelopeIcon, LockClosedIcon } from '@heroicons/react/24/outline';
@@ -16,12 +16,20 @@ export const Login: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [isCapsLockOn, setIsCapsLockOn] = useState(false);
 
   const { login, error: authError, clearError } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
   const from = (location.state as any)?.from?.pathname || '/dashboard';
+
+  useEffect(() => {
+    const savedEmail = localStorage.getItem('savedEmail');
+    if (savedEmail) {
+      setFormData(prev => ({ ...prev, email: savedEmail, rememberMe: true }));
+    }
+  }, []);
 
   const validateForm = (): boolean => {
     const newErrors: { [key: string]: string } = {};
@@ -40,27 +48,49 @@ export const Login: React.FC = () => {
     return Object.keys(newErrors).length === 0;
   };
 
+  const isFormValid = (): boolean => {
+    return /\S+@\S+\.\S+/.test(formData.email) && formData.password.length > 0;
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value,
     }));
+    if (name === 'rememberMe') {
+      if (checked && formData.email) {
+        localStorage.setItem('savedEmail', formData.email);
+      } else {
+        localStorage.removeItem('savedEmail');
+      }
+    }
+
+    if (name === 'email' && formData.rememberMe) {
+      if (value) {
+        localStorage.setItem('savedEmail', value);
+      } else {
+        localStorage.removeItem('savedEmail');
+      }
+    }
     
-    // Clear field error when user starts typing
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
     
-    // Clear auth error
     if (authError) {
       clearError();
     }
   };
 
+  const handleKeyEvent = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // Detect caps lock for password field
+    const caps = (e.getModifierState && e.getModifierState('CapsLock')) || false;
+    setIsCapsLockOn(caps);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!validateForm()) {
       return;
     }
@@ -70,7 +100,7 @@ export const Login: React.FC = () => {
       await login(formData);
       navigate(from, { replace: true });
     } catch (error) {
-      // Error is handled by auth context
+      // Error surfaced via auth context
     } finally {
       setIsLoading(false);
     }
@@ -156,26 +186,33 @@ export const Login: React.FC = () => {
           />
 
           {/* Password */}
-          <Input
-            label="Password"
-            type={showPassword ? 'text' : 'password'}
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            error={errors.password}
-            placeholder="Enter your password"
-            leftIcon={<LockClosedIcon />}
-            rightIcon={
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="text-gray-400 hover:text-gray-600 focus:outline-none"
-              >
-                {showPassword ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
-              </button>
-            }
-            required
-          />
+          <div>
+            <Input
+              label="Password"
+              type={showPassword ? 'text' : 'password'}
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              onKeyUp={handleKeyEvent}
+              onKeyDown={handleKeyEvent}
+              error={errors.password}
+              placeholder="Enter your password"
+              leftIcon={<LockClosedIcon />}
+              rightIcon={
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="text-gray-400 hover:text-gray-600 focus:outline-none"
+                >
+                  {showPassword ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
+                </button>
+              }
+              required
+            />
+            {isCapsLockOn && (
+              <p className="mt-1 text-xs text-orange-600">Caps Lock is on</p>
+            )}
+          </div>
 
           {/* Remember me & Forgot password */}
           <div className="flex items-center justify-between">
@@ -207,6 +244,7 @@ export const Login: React.FC = () => {
             loading={isLoading}
             className="w-full"
             size="lg"
+            disabled={!isFormValid() || isLoading}
           >
             Sign in
           </Button>
