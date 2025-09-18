@@ -2,7 +2,8 @@ import axios, { AxiosResponse, AxiosError, AxiosRequestConfig } from 'axios';
 import { ApiResponse } from '../types';
 
 // Base API configuration
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL as string) || 'http://localhost:5000/api';
+const envBase = (import.meta.env.VITE_API_BASE_URL as string) || '';
+const API_BASE_URL = envBase || (import.meta.env.DEV ? '/api' : 'http://localhost:5000/api');
 
 // Create axios instance with default config
 export const api = axios.create({

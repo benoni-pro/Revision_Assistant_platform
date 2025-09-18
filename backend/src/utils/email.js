@@ -2,9 +2,9 @@ import nodemailer from 'nodemailer';
 
 // Create transporter
 const createTransporter = () => {
-  return nodemailer.createTransporter({
+  return nodemailer.createTransport({
     host: process.env.SMTP_HOST || 'smtp.gmail.com',
-    port: process.env.SMTP_PORT || 587,
+    port: Number(process.env.SMTP_PORT || 587),
     secure: false, // true for 465, false for other ports
     auth: {
       user: process.env.SMTP_USER,
@@ -209,7 +209,7 @@ export const sendEmail = async (options) => {
     }
     
     const mailOptions = {
-      from: `Revision Assistant <${process.env.FROM_EMAIL || process.env.SMTP_USER}>`,
+      from: `Revision Assistant <${process.env.FROM_EMAIL || process.env.SMTP_USER || 'no-reply@revision-assistant.local'}>`,
       to: options.to,
       subject: emailContent.subject,
       html: emailContent.html,
@@ -221,8 +221,9 @@ export const sendEmail = async (options) => {
     return result;
     
   } catch (error) {
-    console.error('Email sending failed:', error);
-    throw new Error(`Email sending failed: ${error.message}`);
+    console.error('Email sending failed (non-blocking):', error.message);
+    // Do not throw – registration should not fail due to email configuration in dev
+    return null;
   }
 };
 
@@ -248,25 +249,17 @@ export const sendBulkEmail = async (recipients, emailOptions) => {
         }
         
         const mailOptions = {
-          from: `Revision Assistant <${process.env.FROM_EMAIL || process.env.SMTP_USER}>`,
+          from: `Revision Assistant <${process.env.FROM_EMAIL || process.env.SMTP_USER || 'no-reply@revision-assistant.local'}>`,
           to: recipient.email,
           subject: emailContent.subject,
           html: emailContent.html
         };
         
         const result = await transporter.sendMail(mailOptions);
-        results.push({
-          email: recipient.email,
-          success: true,
-          messageId: result.messageId
-        });
+        results.push({ email: recipient.email, success: true, messageId: result.messageId });
         
       } catch (error) {
-        results.push({
-          email: recipient.email,
-          success: false,
-          error: error.message
-        });
+        results.push({ email: recipient.email, success: false, error: error.message });
       }
       
       // Add delay to avoid rate limiting
@@ -277,7 +270,7 @@ export const sendBulkEmail = async (recipients, emailOptions) => {
     
   } catch (error) {
     console.error('Bulk email sending failed:', error);
-    throw new Error(`Bulk email sending failed: ${error.message}`);
+    return [];
   }
 };
 

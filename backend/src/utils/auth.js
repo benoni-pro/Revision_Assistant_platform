@@ -56,7 +56,7 @@ export const createTokenResponse = (user) => {
   return {
     accessToken,
     refreshToken,
-    expiresIn: process.env.JWT_EXPIRE || '7d',
+    expiresIn: process.env.JWT_EXPIRES_IN || '15m',
     user: {
       id: user._id,
       email: user.email,
