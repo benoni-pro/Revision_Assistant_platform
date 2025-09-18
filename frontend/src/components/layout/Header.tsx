@@ -47,8 +47,8 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
           </button>
 
           {/* Search */}
-          <form onSubmit={handleSearch} className="hidden md:block">
-            <div className="relative">
+          <form onSubmit={handleSearch} className="hidden sm:block">
+            <div className="relative max-w-xs sm:max-w-md md:max-w-lg lg:max-w-xl">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
               </div>
@@ -58,7 +58,6 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search study groups, quizzes, resources..."
                 className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-gray-50 focus:bg-white focus:border-primary-500 focus:ring-1 focus:ring-primary-500 sm:text-sm"
-                style={{ width: '400px' }}
               />
             </div>
           </form>
@@ -67,7 +66,7 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
         {/* Right section */}
         <div className="flex items-center space-x-4">
           {/* Mobile search button */}
-          <button className="md:hidden p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
+          <button className="sm:hidden p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
             <MagnifyingGlassIcon className="h-6 w-6" />
           </button>
 
