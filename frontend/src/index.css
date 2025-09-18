@@ -114,7 +114,7 @@
   }
   
   .form-textarea {
-    @apply form-input resize-vertical;
+    @apply form-input resize-y;
   }
   
   .form-select {
