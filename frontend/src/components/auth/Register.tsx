@@ -6,6 +6,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { RegisterData } from '../../types';
+import AuthService from '../../services/authService';
 
 export const Register: React.FC = () => {
   const [formData, setFormData] = useState<RegisterData>({
@@ -20,7 +21,7 @@ export const Register: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
-  const { register } = useAuth();
+  const { register, error: authError } = useAuth();
   const navigate = useNavigate();
 
   const validateForm = (): boolean => {
@@ -42,8 +43,11 @@ export const Register: React.FC = () => {
 
     if (!formData.password) {
       newErrors.password = 'Password is required';
-    } else if (formData.password.length < 8) {
-      newErrors.password = 'Password must be at least 8 characters';
+    } else {
+      const { isValid, errors: pwdErrors, strength } = AuthService.validatePasswordStrength(formData.password);
+      if (!isValid) {
+        newErrors.password = pwdErrors[0] || 'Password does not meet requirements';
+      }
     }
 
     if (!formData.confirmPassword) {
@@ -54,6 +58,15 @@ export const Register: React.FC = () => {
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
+  };
+
+  const isFormValid = (): boolean => {
+    const emailOk = /\S+@\S+\.\S+/.test(formData.email);
+    const pwd = formData.password;
+    const pwdOk = !!pwd && AuthService.validatePasswordStrength(pwd).isValid;
+    const namesOk = formData.firstName.trim().length >= 2 && formData.lastName.trim().length >= 2;
+    const confirmOk = formData.confirmPassword.length > 0 && formData.password === formData.confirmPassword;
+    return emailOk && pwdOk && namesOk && confirmOk;
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -98,6 +111,13 @@ export const Register: React.FC = () => {
           <h1 className="text-3xl font-bold text-gradient">Create your account</h1>
           <p className="text-gray-600 mt-2">Join Revision Assistant to supercharge your learning</p>
         </div>
+
+        {/* Backend error message */}
+        {authError && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <p className="text-sm text-red-700">{authError}</p>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -160,6 +180,11 @@ export const Register: React.FC = () => {
             />
           </div>
 
+          {/* Password hint matching backend policy */}
+          <p className="text-xs text-gray-500">
+            Password must be at least 8 characters and include lowercase, uppercase, number, and one special character (@$!%*?&).
+          </p>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="form-label">Role</label>
@@ -192,7 +217,7 @@ export const Register: React.FC = () => {
             </div>
           </div>
 
-          <Button type="submit" loading={isLoading} className="w-full" leftIcon={<AcademicCapIcon className="h-4 w-4" />}>
+          <Button type="submit" loading={isLoading} className="w-full" leftIcon={<AcademicCapIcon className="h-4 w-4" />} disabled={!isFormValid() || isLoading}>
             Create account
           </Button>
 
