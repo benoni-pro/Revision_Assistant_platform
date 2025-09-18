@@ -13,6 +13,10 @@ import GroupRoom from './components/study-groups/GroupRoom';
 import QuizzesPage from './components/quizzes/QuizzesPage';
 import TakeQuizPage from './components/quizzes/TakeQuizPage';
 import ProgressPage from './components/progress/ProgressPage';
+import PrewritingPage from './components/writing/PrewritingPage';
+import OutlinePage from './components/writing/OutlinePage';
+import DraftPage from './components/writing/DraftPage';
+import TeacherDashboard from './components/teacher/TeacherDashboard';
 
 // Protected Route component
 interface ProtectedRouteProps {
@@ -351,6 +355,30 @@ function App() {
               }
             >
               <Route index element={<div className="p-8 text-center">Resources - Coming Soon!</div>} />
+            </Route>
+
+            <Route
+              path="/writing"
+              element={
+                <ProtectedRoute>
+                  <Layout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<PrewritingPage />} />
+              <Route path="outline" element={<OutlinePage />} />
+              <Route path="draft" element={<DraftPage />} />
+            </Route>
+
+            <Route
+              path="/teacher"
+              element={
+                <ProtectedRoute>
+                  <Layout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<TeacherDashboard />} />
             </Route>
             
             <Route

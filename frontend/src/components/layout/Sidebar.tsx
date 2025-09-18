@@ -26,6 +26,7 @@ const navigation = [
   { name: 'Quizzes', href: '/quizzes', icon: AcademicCapIcon },
   { name: 'Progress', href: '/progress', icon: ChartBarIcon },
   { name: 'Resources', href: '/resources', icon: BookOpenIcon },
+  { name: 'Writing', href: '/writing', icon: BookOpenIcon },
   { name: 'Help', href: '/help', icon: QuestionMarkCircleIcon },
   { name: 'Settings', href: '/settings', icon: Cog6ToothIcon },
 ];
@@ -116,7 +117,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggleCollapse })
 
       {/* Navigation */}
       <nav className="flex-1 px-4 py-4 space-y-2 overflow-y-auto">
-        {navigation.map((item) => (
+        {navigation
+          .filter(item => {
+            if (item.href.startsWith('/teacher')) {
+              return ['teacher','manager','admin'].includes(user?.role || 'student');
+            }
+            return true;
+          })
+          .map((item) => (
           <NavLink
             key={item.name}
             to={item.href}
