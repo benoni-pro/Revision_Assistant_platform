@@ -1,5 +1,6 @@
 import express from 'express';
 import { protect, authorize } from '../middleware/authMiddleware.js';
+import OpenAI from 'openai';
 
 const router = express.Router();
 
@@ -20,16 +21,39 @@ const generateRecommendations = (req, res) => {
   res.json({ success: true, message: 'AI Recommendations placeholder', data: ['Practice outlines', 'Focus on cohesion'] });
 };
 
-const getInstantFeedback = (req, res) => {
+const getInstantFeedback = async (req, res) => {
   const { text } = req.body || {};
-  const length = (text || '').length;
-  const issues = [];
-  if (length < 30) issues.push('Your writing is very short; add more detail.');
-  if ((text || '').split(',').length > 5) issues.push('Consider splitting long sentences to improve readability.');
-  res.json({ success: true, message: 'Instant feedback', data: {
-    sentenceFeedback: issues,
-    holisticFeedback: length > 200 ? 'Good development. Consider refining transitions.' : 'Needs more development and clearer structure.'
-  }});
+  if (!text || typeof text !== 'string' || text.trim().length === 0) {
+    return res.status(400).json({ success: false, message: 'Text is required' });
+  }
+
+  try {
+    if (!process.env.OPENAI_API_KEY) throw new Error('Missing OPENAI_API_KEY');
+    const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    const prompt = `Provide concise writing feedback for the following student draft. Return JSON with keys sentenceFeedback (array of brief suggestions) and holisticFeedback (one paragraph). Draft:\n\n${text}`;
+    const completion = await client.chat.completions.create({
+      model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.3,
+    });
+    const content = completion.choices?.[0]?.message?.content || '';
+    // Try to parse JSON; if not JSON, wrap as holistic
+    let data;
+    try { data = JSON.parse(content); } catch {
+      data = { sentenceFeedback: [], holisticFeedback: content };
+    }
+    return res.json({ success: true, message: 'Instant feedback', data });
+  } catch (err) {
+    // Fallback heuristic
+    const length = (text || '').length;
+    const issues = [];
+    if (length < 30) issues.push('Your writing is very short; add more detail.');
+    if ((text || '').split(',').length > 5) issues.push('Consider splitting long sentences to improve readability.');
+    return res.json({ success: true, message: 'Instant feedback (fallback)', data: {
+      sentenceFeedback: issues,
+      holisticFeedback: length > 200 ? 'Good development. Consider refining transitions.' : 'Needs more development and clearer structure.'
+    }});
+  }
 };
 
 const getOutline = (req, res) => {

@@ -19,6 +19,7 @@ import progressRoutes from './routes/progressRoutes.js';
 import aiRoutes from './routes/aiRoutes.js';
 import resourceRoutes from './routes/resourceRoutes.js';
 import rubricRoutes from './routes/rubricRoutes.js';
+import classroomRoutes from './routes/classroomRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 import { setupSocketIO } from './config/socket.js';
 
@@ -103,6 +104,7 @@ app.use('/api/ai', aiRoutes);
 app.use('/api/resources', resourceRoutes);
 app.use('/api/rubrics', rubricRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/classrooms', classroomRoutes);
 
 // Error Middleware
 app.use(notFound);
