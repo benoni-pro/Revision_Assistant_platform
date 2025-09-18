@@ -8,6 +8,9 @@ import Login from './components/auth/Login';
 import Register from './components/auth/Register';
 import VerifyEmail from './components/auth/VerifyEmail';
 import Dashboard from './components/dashboard/Dashboard';
+import StudyGroupsPage from './components/study-groups/StudyGroupsPage';
+import QuizzesPage from './components/quizzes/QuizzesPage';
+import ProgressPage from './components/progress/ProgressPage';
 
 // Protected Route component
 interface ProtectedRouteProps {
@@ -310,7 +313,7 @@ function App() {
                 </ProtectedRoute>
               }
             >
-              <Route index element={<StudyGroups />} />
+              <Route index element={<StudyGroupsPage />} />
             </Route>
             
             <Route
@@ -321,7 +324,7 @@ function App() {
                 </ProtectedRoute>
               }
             >
-              <Route index element={<Quizzes />} />
+              <Route index element={<QuizzesPage />} />
             </Route>
             
             <Route
@@ -332,7 +335,7 @@ function App() {
                 </ProtectedRoute>
               }
             >
-              <Route index element={<Progress />} />
+              <Route index element={<ProgressPage />} />
             </Route>
             
             <Route

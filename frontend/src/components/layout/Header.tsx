@@ -11,6 +11,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { useAuth } from '../../contexts/AuthContext';
 import { Button } from '../ui/Button';
+import ThemeToggle from '../ui/ThemeToggle';
 
 interface HeaderProps {
   onToggleSidebar: () => void;
@@ -69,6 +70,8 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
           <button className="md:hidden p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
             <MagnifyingGlassIcon className="h-6 w-6" />
           </button>
+
+          <ThemeToggle />
 
           {/* Notifications */}
           <div className="relative">
