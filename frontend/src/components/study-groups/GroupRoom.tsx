@@ -17,6 +17,7 @@ export const GroupRoom: React.FC = () => {
   const { id } = useParams();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
+  const [typingUsers, setTypingUsers] = useState<Record<string, string>>({});
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -26,9 +27,24 @@ export const GroupRoom: React.FC = () => {
     const onNew = (msg: ChatMessage) => setMessages((prev) => [...prev, msg]);
     socket.on('chat:new-message', onNew);
 
+    const onTypingStart = (data: any) => {
+      setTypingUsers((prev) => ({ ...prev, [data.userId]: data.firstName }));
+    };
+    const onTypingStop = (data: any) => {
+      setTypingUsers((prev) => {
+        const copy = { ...prev };
+        delete copy[data.userId];
+        return copy;
+      });
+    };
+    socket.on('typing:user-started', onTypingStart);
+    socket.on('typing:user-stopped', onTypingStop);
+
     return () => {
       if (id) socket.emit('study-group:leave', id);
       socket.off('chat:new-message', onNew);
+      socket.off('typing:user-started', onTypingStart);
+      socket.off('typing:user-stopped', onTypingStop);
     };
   }, [id]);
 
@@ -42,6 +58,15 @@ export const GroupRoom: React.FC = () => {
     const socket = getSocket();
     socket.emit('chat:message', { groupId: id, message: trimmed, type: 'text' });
     setInput('');
+    socket.emit('typing:stop', { groupId: id });
+  };
+
+  const handleInput = (v: string) => {
+    setInput(v);
+    const socket = getSocket();
+    if (!id) return;
+    if (v.trim().length > 0) socket.emit('typing:start', { groupId: id });
+    else socket.emit('typing:stop', { groupId: id });
   };
 
   return (
@@ -53,10 +78,13 @@ export const GroupRoom: React.FC = () => {
             <div className="text-sm text-gray-700">{m.message}</div>
           </div>
         ))}
+        {Object.keys(typingUsers).length > 0 && (
+          <div className="text-xs text-gray-500">{Object.values(typingUsers).join(', ')} typing...</div>
+        )}
         <div ref={bottomRef} />
       </div>
       <div className="border-t p-3 flex gap-2">
-        <input className="form-input flex-1" value={input} onChange={(e) => setInput(e.target.value)} placeholder="Type a message..." />
+        <input className="form-input flex-1" value={input} onChange={(e) => handleInput(e.target.value)} placeholder="Type a message..." />
         <button className="btn-primary" onClick={send}>
           <PaperAirplaneIcon className="h-5 w-5" />
         </button>
