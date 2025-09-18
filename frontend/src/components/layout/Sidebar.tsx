@@ -13,6 +13,7 @@ import {
   ChevronRightIcon,
 } from '@heroicons/react/24/outline';
 import { useAuth } from '../../contexts/AuthContext';
+import { usePresence } from '../../contexts/PresenceContext';
 
 interface SidebarProps {
   collapsed: boolean;
@@ -31,6 +32,7 @@ const navigation = [
 
 export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggleCollapse }) => {
   const { user } = useAuth();
+  const { onlineUsers } = usePresence();
 
   return (
     <motion.div
@@ -71,7 +73,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggleCollapse })
       {/* User profile */}
       <div className="p-4 border-b border-gray-200">
         <div className="flex items-center space-x-3">
-          <div className="flex-shrink-0 w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
+          <div className="relative flex-shrink-0 w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
             {user?.avatar ? (
               <img
                 src={user.avatar}
@@ -82,6 +84,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggleCollapse })
               <span className="text-primary-600 font-semibold text-sm">
                 {user?.firstName?.charAt(0)}{user?.lastName?.charAt(0)}
               </span>
+            )}
+            {user && onlineUsers[user.id] && (
+              <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-green-500 ring-2 ring-white" />
             )}
           </div>
           <motion.div

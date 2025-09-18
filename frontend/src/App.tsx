@@ -5,7 +5,14 @@ import { Link } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Layout from './components/layout/Layout';
 import Login from './components/auth/Login';
+import Register from './components/auth/Register';
+import VerifyEmail from './components/auth/VerifyEmail';
 import Dashboard from './components/dashboard/Dashboard';
+import StudyGroupsPage from './components/study-groups/StudyGroupsPage';
+import GroupRoom from './components/study-groups/GroupRoom';
+import QuizzesPage from './components/quizzes/QuizzesPage';
+import TakeQuizPage from './components/quizzes/TakeQuizPage';
+import ProgressPage from './components/progress/ProgressPage';
 
 // Protected Route component
 interface ProtectedRouteProps {
@@ -47,8 +54,8 @@ const PublicRoute: React.FC<PublicRouteProps> = ({ children }) => {
 
 // Landing Page Component
 const LandingPage = () => (
-  <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100">
-    <div className="flex items-center justify-center min-h-screen">
+  <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100 dark:from-secondary-900 dark:to-secondary-800">
+    <div className="flex items-center justify-center min-h-[60vh] pt-12">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -56,7 +63,7 @@ const LandingPage = () => (
         className="text-center px-4"
       >
         <motion.h1
-          className="text-6xl font-bold text-gradient mb-6"
+          className="text-4xl sm:text-5xl md:text-6xl font-bold text-gradient mb-6"
           initial={{ scale: 0.8 }}
           animate={{ scale: 1 }}
           transition={{ duration: 0.5, delay: 0.2 }}
@@ -64,7 +71,7 @@ const LandingPage = () => (
           Revision Assistant
         </motion.h1>
         <motion.p
-          className="text-xl text-secondary-700 mb-8 max-w-2xl mx-auto"
+          className="text-base sm:text-lg md:text-xl text-secondary-700 dark:text-secondary-300 mb-8 max-w-2xl mx-auto px-2"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.4 }}
@@ -78,7 +85,7 @@ const LandingPage = () => (
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.6 }}
         >
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
             <Link to="/register">
               <button className="btn-primary btn-lg">
                 Get Started
@@ -99,13 +106,13 @@ const LandingPage = () => (
     
     {/* Features Section */}
     <motion.section
-      className="py-20 bg-white"
+      className="py-16 sm:py-20 bg-white dark:bg-secondary-900"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.8, delay: 0.8 }}
     >
       <div className="container mx-auto px-4">
-        <h2 className="text-4xl font-bold text-center text-secondary-900 mb-12">
+        <h2 className="text-3xl sm:text-4xl font-bold text-center text-secondary-900 dark:text-secondary-100 mb-8 sm:mb-12">
           Why Choose Revision Assistant?
         </h2>
         <div className="grid md:grid-cols-3 gap-8">
@@ -263,7 +270,16 @@ function App() {
               path="/register"
               element={
                 <PublicRoute>
-                  <div className="p-8 text-center">Register Page - Coming Soon!</div>
+                  <Register />
+                </PublicRoute>
+              }
+            />
+
+            <Route
+              path="/verify-email"
+              element={
+                <PublicRoute>
+                  <VerifyEmail />
                 </PublicRoute>
               }
             />
@@ -299,7 +315,8 @@ function App() {
                 </ProtectedRoute>
               }
             >
-              <Route index element={<StudyGroups />} />
+              <Route index element={<StudyGroupsPage />} />
+              <Route path=":id" element={<GroupRoom />} />
             </Route>
             
             <Route
@@ -310,7 +327,8 @@ function App() {
                 </ProtectedRoute>
               }
             >
-              <Route index element={<Quizzes />} />
+              <Route index element={<QuizzesPage />} />
+              <Route path=":id" element={<TakeQuizPage />} />
             </Route>
             
             <Route
@@ -321,7 +339,7 @@ function App() {
                 </ProtectedRoute>
               }
             >
-              <Route index element={<Progress />} />
+              <Route index element={<ProgressPage />} />
             </Route>
             
             <Route
