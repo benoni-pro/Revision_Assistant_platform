@@ -6,6 +6,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { LoginData } from '../../types';
+import toast from 'react-hot-toast';
 
 export const Login: React.FC = () => {
   const [formData, setFormData] = useState<LoginData>({
@@ -15,10 +16,11 @@ export const Login: React.FC = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [isCapsLockOn, setIsCapsLockOn] = useState(false);
 
-  const { login, error: authError, clearError } = useAuth();
+  const { login, loginWithGoogle, error: authError, clearError } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -103,6 +105,19 @@ export const Login: React.FC = () => {
       // Error surfaced via auth context
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setIsGoogleLoading(true);
+    try {
+      await loginWithGoogle();
+      navigate(from, { replace: true });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Google login failed';
+      toast.error(msg);
+    } finally {
+      setIsGoogleLoading(false);
     }
   };
 
@@ -255,17 +270,29 @@ export const Login: React.FC = () => {
               <div className="w-full border-t border-gray-300" />
             </div>
             <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-white text-gray-500">Or continue with</span>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleGoogleLogin}
+            disabled={isGoogleLoading}
+            className="w-full flex justify-center items-center py-3 px-4 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-200"
+          >
+            {isGoogleLoading ? 'Signing in…' : 'Sign in with Google'}
+          </button>
+
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-300" />
+            </div>
+            <div className="relative flex justify-center text-sm">
               <span className="px-2 bg-white text-gray-500">Don't have an account?</span>
             </div>
           </div>
 
-          {/* Register link */}
-          <Link
-            to="/register"
-            className="w-full flex justify-center py-3 px-4 border border-primary-300 rounded-lg text-sm font-medium text-primary-700 bg-primary-50 hover:bg-primary-100 transition-colors duration-200"
-          >
-            Create new account
-          </Link>
+          <Link to="/register" className="w-full flex justify-center py-3 px-4 border border-primary-300 rounded-lg text-sm font-medium text-primary-700 bg-primary-50 hover:bg-primary-100 transition-colors duration-200">Create new account</Link>
         </motion.form>
 
         {/* Demo credentials (for development) */}

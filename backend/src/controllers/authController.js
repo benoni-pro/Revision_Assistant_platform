@@ -9,6 +9,19 @@ import {
   verifyRefreshToken
 } from '../utils/auth.js';
 import { sendEmail } from '../utils/email.js';
+import admin from 'firebase-admin';
+
+// Initialize Firebase Admin once (if credentials are provided)
+try {
+  if (!admin.apps.length && process.env.FIREBASE_PROJECT_ID) {
+    admin.initializeApp({
+      credential: admin.credential.applicationDefault(),
+      projectId: process.env.FIREBASE_PROJECT_ID
+    });
+  }
+} catch (e) {
+  // Non-blocking in dev
+}
 
 // @desc    Register new user
 // @route   POST /api/auth/register
@@ -413,6 +426,51 @@ export const resendVerification = async (req, res) => {
   }
 };
 
+// @desc    Login or register via Firebase ID token, return our JWTs
+// @route   POST /api/auth/firebase
+// @access  Public
+export const loginWithFirebase = async (req, res) => {
+  try {
+    const { idToken, role = 'student', academicLevel } = req.body;
+
+    if (!admin.apps.length) {
+      return res.status(500).json({ success: false, message: 'Firebase not configured on server' });
+    }
+
+    // Verify Firebase ID token
+    const decoded = await admin.auth().verifyIdToken(idToken);
+    const email = decoded.email?.toLowerCase();
+    const firstName = (decoded.name || '').split(' ')[0] || 'User';
+    const lastName = (decoded.name || '').split(' ').slice(1).join(' ') || 'Firebase';
+
+    if (!email) {
+      return res.status(400).json({ success: false, message: 'Email not present in Firebase token' });
+    }
+
+    // Find or create user
+    let user = await User.findOne({ email });
+    if (!user) {
+      user = await User.create({
+        firstName,
+        lastName,
+        email,
+        password: generateEmailVerificationToken().verificationToken, // temporary random
+        role: ['student', 'teacher', 'manager', 'admin'].includes(role) ? role : 'student',
+        isVerified: true
+      });
+      await Progress.create({ user: user._id });
+    }
+
+    // Issue our tokens
+    const tokenResponse = createTokenResponse(user);
+    return res.status(200).json({ success: true, message: 'Login successful', data: tokenResponse });
+
+  } catch (error) {
+    console.error('Firebase login error:', error);
+    return res.status(401).json({ success: false, message: 'Invalid Firebase token' });
+  }
+};
+
 // @desc    Forgot password
 // @route   POST /api/auth/forgot-password
 // @access  Public
@@ -582,5 +640,6 @@ export default {
   resendVerification,
   forgotPassword,
   resetPassword,
-  changePassword
+  changePassword,
+  loginWithFirebase
 };

@@ -2,14 +2,14 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 
 // Generate JWT token
-export const generateToken = (payload, secret = process.env.JWT_SECRET, expiresIn = process.env.JWT_EXPIRES_IN) => {
+export const generateToken = (payload, secret = process.env.JWT_SECRET, expiresIn = process.env.JWT_EXPIRES_IN || '15m') => {
   return jwt.sign(payload, secret, { expiresIn });
 };
 
 // Generate refresh token
 export const generateRefreshToken = (payload) => {
-  return jwt.sign(payload, process.env.JWT_REFRESH_SECRET, { 
-    expiresIn: process.env.JWT_REFRESH_EXPIRES_IN 
+  return jwt.sign(payload, process.env.JWT_REFRESH_SECRET, {
+    expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '30d'
   });
 };
 

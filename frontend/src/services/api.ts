@@ -143,6 +143,11 @@ export const apiPatch = <T>(url: string, data?: any, config?: AxiosRequestConfig
 export const apiDelete = <T>(url: string, config?: AxiosRequestConfig) =>
   apiRequest<T>('delete', url, undefined, config);
 
+// Firebase login exchange
+export const apiFirebaseLogin = async (idToken: string) => {
+  return apiPost('/auth/firebase', { idToken });
+};
+
 // File upload helper
 export const uploadFile = async (
   url: string,

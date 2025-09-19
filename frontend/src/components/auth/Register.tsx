@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { UserIcon, EnvelopeIcon, LockClosedIcon, AcademicCapIcon } from '@heroicons/react/24/outline';
+import { UserIcon, EnvelopeIcon, LockClosedIcon, AcademicCapIcon, CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../../contexts/AuthContext';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { RegisterData } from '../../types';
 import AuthService from '../../services/authService';
+import toast from 'react-hot-toast';
 
 export const Register: React.FC = () => {
   const [formData, setFormData] = useState<RegisterData>({
@@ -23,6 +24,15 @@ export const Register: React.FC = () => {
 
   const { register, error: authError } = useAuth();
   const navigate = useNavigate();
+
+  const passwordValidation = useMemo(() => AuthService.validatePasswordStrength(formData.password || ''), [formData.password]);
+  const passwordChecklist = [
+    { label: 'At least 8 characters', valid: (formData.password || '').length >= 8 },
+    { label: 'Lowercase letter', valid: /[a-z]/.test(formData.password || '') },
+    { label: 'Uppercase letter', valid: /[A-Z]/.test(formData.password || '') },
+    { label: 'Number', valid: /\d/.test(formData.password || '') },
+    { label: 'Special character (@$!%*?&)', valid: /[@$!%*?&]/.test(formData.password || '') },
+  ];
 
   const validateForm = (): boolean => {
     const newErrors: { [key: string]: string } = {};
@@ -44,7 +54,7 @@ export const Register: React.FC = () => {
     if (!formData.password) {
       newErrors.password = 'Password is required';
     } else {
-      const { isValid, errors: pwdErrors, strength } = AuthService.validatePasswordStrength(formData.password);
+      const { isValid, errors: pwdErrors } = AuthService.validatePasswordStrength(formData.password);
       if (!isValid) {
         newErrors.password = pwdErrors[0] || 'Password does not meet requirements';
       }
@@ -77,7 +87,10 @@ export const Register: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateForm()) return;
+    if (!validateForm()) {
+      toast.error('Please fix the highlighted errors');
+      return;
+    }
 
     setIsLoading(true);
     try {
@@ -91,9 +104,11 @@ export const Register: React.FC = () => {
       } as RegisterData;
 
       await register(payload);
+      toast.success('Account created successfully');
       navigate('/dashboard', { replace: true });
     } catch (err) {
-      // Error handled by context, optional local message
+      const message = err instanceof Error ? err.message : 'Registration failed';
+      toast.error(message);
     } finally {
       setIsLoading(false);
     }
@@ -119,7 +134,7 @@ export const Register: React.FC = () => {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4" aria-live="polite">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
               label="First name"
@@ -180,10 +195,15 @@ export const Register: React.FC = () => {
             />
           </div>
 
-          {/* Password hint matching backend policy */}
-          <p className="text-xs text-gray-500">
-            Password must be at least 8 characters and include lowercase, uppercase, number, and one special character (@$!%*?&).
-          </p>
+          {/* Live password checklist */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+            {passwordChecklist.map((rule) => (
+              <div key={rule.label} className={`flex items-center ${rule.valid ? 'text-green-600' : 'text-gray-500'}`}>
+                {rule.valid ? <CheckCircleIcon className="h-4 w-4 mr-1" /> : <XCircleIcon className="h-4 w-4 mr-1" />}
+                <span>{rule.label}</span>
+              </div>
+            ))}
+          </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>

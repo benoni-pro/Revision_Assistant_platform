@@ -1,11 +1,18 @@
 import { apiPost, apiGet, apiPut } from './api';
 import { AuthResponse, LoginData, RegisterData, User } from '../types';
+import { apiFirebaseLogin } from './api';
 
 export class AuthService {
   // Login user
   static async login(loginData: LoginData): Promise<AuthResponse> {
     const response = await apiPost<AuthResponse>('/auth/login', loginData);
     return response.data!;
+  }
+
+  // Login with Firebase ID token
+  static async loginWithFirebase(idToken: string): Promise<AuthResponse> {
+    const response = await apiFirebaseLogin(idToken);
+    return response.data! as AuthResponse;
   }
 
   // Register new user

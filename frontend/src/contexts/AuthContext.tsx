@@ -2,6 +2,25 @@ import React, { createContext, useContext, useReducer, useEffect, ReactNode } fr
 import { User, AuthResponse, LoginData, RegisterData } from '../types';
 import AuthService from '../services/authService';
 import { tokenManager } from '../services/api';
+import { getAuth, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { initializeApp } from 'firebase/app';
+
+// Initialize Firebase app if keys are present
+const firebaseConfig = {
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+};
+let firebaseInitialized = false;
+try {
+  if (firebaseConfig.apiKey) {
+    initializeApp(firebaseConfig);
+    firebaseInitialized = true;
+  }
+} catch {}
 
 // Auth state interface
 interface AuthState {
@@ -82,6 +101,7 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
 // Auth context interface
 interface AuthContextType extends AuthState {
   login: (loginData: LoginData) => Promise<void>;
+  loginWithGoogle: () => Promise<void>;
   register: (registerData: RegisterData) => Promise<void>;
   logout: () => Promise<void>;
   verifyEmail: (token: string) => Promise<void>;
@@ -188,6 +208,29 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const loginWithGoogle = async (): Promise<void> => {
+    try {
+      dispatch({ type: 'AUTH_START' });
+      if (!firebaseInitialized) throw new Error('Google login not configured');
+      const auth = getAuth();
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      const idToken = await result.user.getIdToken();
+      const response = await AuthService.loginWithFirebase(idToken);
+      if (response.success && response.data) {
+        const { accessToken, refreshToken, user } = response.data;
+        tokenManager.setTokens(accessToken, refreshToken);
+        dispatch({ type: 'AUTH_SUCCESS', payload: user });
+      } else {
+        throw new Error(response.message || 'Google login failed');
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Google login failed';
+      dispatch({ type: 'AUTH_FAILURE', payload: message });
+      throw error;
+    }
+  };
+
   const register = async (registerData: RegisterData): Promise<void> => {
     try {
       dispatch({ type: 'AUTH_START' });
@@ -289,6 +332,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const value: AuthContextType = {
     ...state,
     login,
+    loginWithGoogle,
     register,
     logout,
     verifyEmail,

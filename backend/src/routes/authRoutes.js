@@ -12,7 +12,8 @@ import {
   resendVerification,
   forgotPassword,
   resetPassword,
-  changePassword
+  changePassword,
+  loginWithFirebase
 } from '../controllers/authController.js';
 
 const router = express.Router();
@@ -105,6 +106,13 @@ const refreshTokenValidation = [
     .withMessage('Refresh token cannot be empty')
 ];
 
+const firebaseLoginValidation = [
+  body('idToken')
+    .isString()
+    .isLength({ min: 10 })
+    .withMessage('Valid Firebase ID token is required')
+];
+
 // Public routes
 router.post('/register', registerValidation, validate, register);
 router.post('/login', loginValidation, validate, login);
@@ -112,6 +120,7 @@ router.post('/refresh', refreshTokenValidation, validate, refreshToken);
 router.get('/verify-email/:token', verifyEmailValidation, validate, verifyEmail);
 router.post('/forgot-password', forgotPasswordValidation, validate, forgotPassword);
 router.put('/reset-password/:token', resetPasswordValidation, validate, resetPassword);
+router.post('/firebase', firebaseLoginValidation, validate, loginWithFirebase);
 
 // Protected routes (require authentication)
 router.post('/logout', protect, logout);
