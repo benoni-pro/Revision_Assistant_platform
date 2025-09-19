@@ -149,6 +149,10 @@ export const Login: React.FC = () => {
           >
             Welcome back
           </motion.h2>
+          <div className="mt-4 inline-flex items-center rounded-lg border border-gray-200 overflow-hidden">
+            <span className="px-4 py-2 text-sm bg-primary-600 text-white">Sign in</span>
+            <Link to="/register" className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">Sign up</Link>
+          </div>
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
