@@ -12,8 +12,7 @@ import {
   resendVerification,
   forgotPassword,
   resetPassword,
-  changePassword,
-  loginWithFirebase
+  changePassword
 } from '../controllers/authController.js';
 
 const router = express.Router();
@@ -33,8 +32,8 @@ const registerValidation = [
     .normalizeEmail()
     .withMessage('Please enter a valid email'),
   body('password')
-    .isLength({ min: 8 })
-    .withMessage('Password must be at least 8 characters long'),
+    .isLength({ min: 4 })
+    .withMessage('Password must be at least 4 characters long'),
   body('role')
     .optional()
     .isIn(['student', 'teacher', 'manager', 'admin'])
@@ -80,8 +79,8 @@ const resetPasswordValidation = [
     .isLength({ min: 1 })
     .withMessage('Reset token is required'),
   body('password')
-    .isLength({ min: 8 })
-    .withMessage('Password must be at least 8 characters long')
+    .isLength({ min: 4 })
+    .withMessage('Password must be at least 4 characters long')
 ];
 
 const changePasswordValidation = [
@@ -89,8 +88,8 @@ const changePasswordValidation = [
     .notEmpty()
     .withMessage('Current password is required'),
   body('newPassword')
-    .isLength({ min: 8 })
-    .withMessage('New password must be at least 8 characters long')
+    .isLength({ min: 4 })
+    .withMessage('New password must be at least 4 characters long')
 ];
 
 const verifyEmailValidation = [
@@ -106,13 +105,6 @@ const refreshTokenValidation = [
     .withMessage('Refresh token cannot be empty')
 ];
 
-const firebaseLoginValidation = [
-  body('idToken')
-    .isString()
-    .isLength({ min: 10 })
-    .withMessage('Valid Firebase ID token is required')
-];
-
 // Public routes
 router.post('/register', registerValidation, validate, register);
 router.post('/login', loginValidation, validate, login);
@@ -120,7 +112,6 @@ router.post('/refresh', refreshTokenValidation, validate, refreshToken);
 router.get('/verify-email/:token', verifyEmailValidation, validate, verifyEmail);
 router.post('/forgot-password', forgotPasswordValidation, validate, forgotPassword);
 router.put('/reset-password/:token', resetPasswordValidation, validate, resetPassword);
-router.post('/firebase', firebaseLoginValidation, validate, loginWithFirebase);
 
 // Protected routes (require authentication)
 router.post('/logout', protect, logout);

@@ -15,44 +15,41 @@ export const generateRefreshToken = (payload) => {
 
 // Verify JWT token
 export const verifyToken = (token, secret = process.env.JWT_SECRET) => {
-  try {
-    return jwt.verify(token, secret);
-  } catch (error) {
-    throw new Error('Invalid token');
-  }
+  try { return jwt.verify(token, secret); } catch { throw new Error('Invalid token'); }
 };
 
 // Verify refresh token
 export const verifyRefreshToken = (token) => {
-  try {
-    return jwt.verify(token, process.env.JWT_REFRESH_SECRET);
-  } catch (error) {
-    throw new Error('Invalid refresh token');
-  }
+  try { return jwt.verify(token, process.env.JWT_REFRESH_SECRET); } catch { throw new Error('Invalid refresh token'); }
 };
 
 // Generate secure random token for password reset/email verification
-export const generateSecureToken = () => {
-  return crypto.randomBytes(32).toString('hex');
-};
+export const generateSecureToken = () => crypto.randomBytes(32).toString('hex');
 
 // Hash token for database storage
-export const hashToken = (token) => {
-  return crypto.createHash('sha256').update(token).digest('hex');
+export const hashToken = (token) => crypto.createHash('sha256').update(token).digest('hex');
+
+// Password reset token with expiry (10 minutes)
+export const generatePasswordResetToken = () => {
+  const resetToken = generateSecureToken();
+  const hashedToken = hashToken(resetToken);
+  const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+  return { resetToken, hashedToken, expiresAt };
+};
+
+// Email verification token with expiry (24 hours)
+export const generateEmailVerificationToken = () => {
+  const verificationToken = generateSecureToken();
+  const hashedToken = hashToken(verificationToken);
+  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+  return { verificationToken, hashedToken, expiresAt };
 };
 
 // Create token response object
 export const createTokenResponse = (user) => {
-  const payload = {
-    id: user._id,
-    email: user.email,
-    role: user.role,
-    permissions: user.permissions || []
-  };
-
+  const payload = { id: user._id, email: user.email, role: user.role, permissions: user.permissions || [] };
   const accessToken = generateToken(payload);
   const refreshToken = generateRefreshToken({ id: user._id });
-
   return {
     accessToken,
     refreshToken,
@@ -72,103 +69,30 @@ export const createTokenResponse = (user) => {
 
 // Extract token from request headers
 export const extractTokenFromHeader = (authHeader) => {
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return null;
-  }
+  if (!authHeader || !authHeader.startsWith('Bearer ')) return null;
   return authHeader.substring(7);
 };
 
-// Check if user has required permission
+// Permissions/roles helpers (used by middleware)
 export const hasPermission = (userPermissions, requiredPermission) => {
-  if (!userPermissions || !Array.isArray(userPermissions)) {
-    return false;
-  }
+  if (!Array.isArray(userPermissions)) return false;
   return userPermissions.includes(requiredPermission);
 };
 
-// Check if user has any of the required roles
 export const hasRole = (userRole, requiredRoles) => {
-  if (!Array.isArray(requiredRoles)) {
-    requiredRoles = [requiredRoles];
-  }
-  return requiredRoles.includes(userRole);
+  const roles = Array.isArray(requiredRoles) ? requiredRoles : [requiredRoles];
+  return roles.includes(userRole);
 };
 
-// Generate password reset token with expiry
-export const generatePasswordResetToken = () => {
-  const resetToken = generateSecureToken();
-  const hashedToken = hashToken(resetToken);
-  const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-
-  return {
-    resetToken,
-    hashedToken,
-    expiresAt
-  };
-};
-
-// Generate email verification token with expiry
-export const generateEmailVerificationToken = () => {
-  const verificationToken = generateSecureToken();
-  const hashedToken = hashToken(verificationToken);
-  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
-
-  return {
-    verificationToken,
-    hashedToken,
-    expiresAt
-  };
-};
-
-// Validate password strength
+// Basic password validation (min length 4)
 export const validatePasswordStrength = (password) => {
   const errors = [];
-  
-  if (password.length < 8) {
-    errors.push('Password must be at least 8 characters long');
-  }
-  
-  if (!/(?=.*[a-z])/.test(password)) {
-    errors.push('Password must contain at least one lowercase letter');
-  }
-  
-  if (!/(?=.*[A-Z])/.test(password)) {
-    errors.push('Password must contain at least one uppercase letter');
-  }
-  
-  if (!/(?=.*\d)/.test(password)) {
-    errors.push('Password must contain at least one number');
-  }
-  
-  if (!/(?=.*[@$!%*?&])/.test(password)) {
-    errors.push('Password must contain at least one special character (@$!%*?&)');
-  }
-  
-  return {
-    isValid: errors.length === 0,
-    errors
-  };
+  if (password.length < 4) errors.push('Password must be at least 4 characters long');
+  return { isValid: errors.length === 0, errors };
 };
 
-// Calculate password strength score
-export const calculatePasswordStrength = (password) => {
-  let score = 0;
-  
-  // Length bonus
-  if (password.length >= 8) score += 25;
-  if (password.length >= 12) score += 25;
-  
-  // Character variety bonus
-  if (/[a-z]/.test(password)) score += 10;
-  if (/[A-Z]/.test(password)) score += 10;
-  if (/\d/.test(password)) score += 10;
-  if (/[@$!%*?&]/.test(password)) score += 10;
-  
-  // Additional complexity bonus
-  if (/[^a-zA-Z0-9@$!%*?&]/.test(password)) score += 10;
-  
-  return Math.min(score, 100);
-};
+// Calculate password strength score (simplified)
+export const calculatePasswordStrength = (password) => Math.min(password.length * 10, 100);
 
 export default {
   generateToken,
@@ -177,12 +101,12 @@ export default {
   verifyRefreshToken,
   generateSecureToken,
   hashToken,
+  generatePasswordResetToken,
+  generateEmailVerificationToken,
   createTokenResponse,
   extractTokenFromHeader,
   hasPermission,
   hasRole,
-  generatePasswordResetToken,
-  generateEmailVerificationToken,
   validatePasswordStrength,
   calculatePasswordStrength
 };

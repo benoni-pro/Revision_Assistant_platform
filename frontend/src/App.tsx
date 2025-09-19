@@ -235,7 +235,9 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ icon, title, description }) =
     whileHover={{ scale: 1.05 }}
     transition={{ type: "spring", stiffness: 300, damping: 10 }}
   >
-    <div className="text-4xl mb-4">{icon}</div>
+    <div className="text-4xl mb-4">{icon}
+      
+    </div>
     <h3 className="text-xl font-semibold text-secondary-800 mb-2">{title}</h3>
     <p className="text-secondary-600">{description}</p>
   </motion.div>
