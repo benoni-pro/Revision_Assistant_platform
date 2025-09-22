@@ -68,12 +68,12 @@ export const register = async (req, res) => {
 
     // Send verification email only if enabled
     if (isEmailEnabled()) {
-      try {
-        const verificationUrl = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
+    try {
+      const verificationUrl = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
         await sendEmail({ to: user.email, subject: 'Verify Your Email - Revision Assistant', template: 'emailVerification', data: { firstName: user.firstName, verificationUrl } });
-      } catch (emailError) {
+    } catch (emailError) {
         // Non-blocking
-      }
+    }
     }
 
     const tokenResponse = createTokenResponse(user);

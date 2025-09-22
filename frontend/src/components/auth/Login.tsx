@@ -109,7 +109,7 @@ export const Login: React.FC = () => {
             <label className="inline-flex items-center">
               <input id="rememberMe" name="rememberMe" type="checkbox" checked={formData.rememberMe} onChange={handleChange} className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded" />
               <span className="ml-2 block text-sm text-gray-700">Remember me</span>
-            </label>
+              </label>
             <Link to="/forgot-password" className="text-sm text-primary-600 hover:text-primary-500 hover:underline">Forgot password?</Link>
           </div>
 

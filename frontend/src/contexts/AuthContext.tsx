@@ -89,8 +89,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         else dispatch({ type: 'AUTH_FAILURE', payload: '' });
         return;
       }
-      const user = await AuthService.getCurrentUser();
-      dispatch({ type: 'AUTH_SUCCESS', payload: user });
+            const user = await AuthService.getCurrentUser();
+            dispatch({ type: 'AUTH_SUCCESS', payload: user });
     } catch {
       tokenManager.clearTokens();
       dispatch({ type: 'AUTH_FAILURE', payload: '' });

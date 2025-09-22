@@ -20,6 +20,7 @@ import TeacherDashboard from './components/teacher/TeacherDashboard';
 import RubricsPage from './components/teacher/RubricsPage';
 import SettingsPage from './components/settings/SettingsPage';
 
+import Settings from "./components/settings/Settings";
 // Protected Route component
 interface ProtectedRouteProps {
   children: React.ReactNode;
