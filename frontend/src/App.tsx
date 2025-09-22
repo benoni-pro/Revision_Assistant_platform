@@ -18,6 +18,7 @@ import OutlinePage from './components/writing/OutlinePage';
 import DraftPage from './components/writing/DraftPage';
 import TeacherDashboard from './components/teacher/TeacherDashboard';
 import RubricsPage from './components/teacher/RubricsPage';
+import SettingsPage from './components/settings/SettingsPage';
 
 // Protected Route component
 interface ProtectedRouteProps {
@@ -165,62 +166,7 @@ const LandingPage = () => (
   </div>
 );
 
-// Placeholder components for other routes
-const StudyGroups = () => (
-  <div className="text-center py-12">
-    <h1 className="text-2xl font-bold text-gray-900 mb-4">Study Groups</h1>
-    <p className="text-gray-600">Connect and collaborate with fellow learners</p>
-    <div className="mt-8">
-      <div className="bg-white rounded-lg shadow p-6 max-w-md mx-auto">
-        <div className="text-4xl mb-4">👥</div>
-        <h3 className="font-semibold mb-2">Coming Soon!</h3>
-        <p className="text-sm text-gray-600">Study groups feature is under development</p>
-      </div>
-    </div>
-  </div>
-);
-
-const Quizzes = () => (
-  <div className="text-center py-12">
-    <h1 className="text-2xl font-bold text-gray-900 mb-4">Quizzes</h1>
-    <p className="text-gray-600">Test your knowledge with adaptive quizzes</p>
-    <div className="mt-8">
-      <div className="bg-white rounded-lg shadow p-6 max-w-md mx-auto">
-        <div className="text-4xl mb-4">🧠</div>
-        <h3 className="font-semibold mb-2">Coming Soon!</h3>
-        <p className="text-sm text-gray-600">Interactive quiz system is being built</p>
-      </div>
-    </div>
-  </div>
-);
-
-const Progress = () => (
-  <div className="text-center py-12">
-    <h1 className="text-2xl font-bold text-gray-900 mb-4">Progress Tracking</h1>
-    <p className="text-gray-600">Monitor your learning journey and achievements</p>
-    <div className="mt-8">
-      <div className="bg-white rounded-lg shadow p-6 max-w-md mx-auto">
-        <div className="text-4xl mb-4">📊</div>
-        <h3 className="font-semibold mb-2">Coming Soon!</h3>
-        <p className="text-sm text-gray-600">Advanced analytics and progress tracking</p>
-      </div>
-    </div>
-  </div>
-);
-
-const Settings = () => (
-  <div className="text-center py-12">
-    <h1 className="text-2xl font-bold text-gray-900 mb-4">Settings</h1>
-    <p className="text-gray-600">Customize your learning experience</p>
-    <div className="mt-8">
-      <div className="bg-white rounded-lg shadow p-6 max-w-md mx-auto">
-        <div className="text-4xl mb-4">⚙️</div>
-        <h3 className="font-semibold mb-2">Coming Soon!</h3>
-        <p className="text-sm text-gray-600">User preferences and settings</p>
-      </div>
-    </div>
-  </div>
-);
+// Placeholder routes removed (Pages now exist in components directory)
 
 // Helper components
 interface FeatureCardProps {
@@ -393,7 +339,7 @@ function App() {
                 </ProtectedRoute>
               }
             >
-              <Route index element={<Settings />} />
+              <Route index element={<SettingsPage />} />
             </Route>
             
             <Route

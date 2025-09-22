@@ -1,12 +1,16 @@
 import { apiGet, apiPost } from './api';
 
 export const aiService = {
+  models: async () => {
+    const res = await apiGet('/ai/models');
+    return res.data as any;
+  },
   analysis: async () => {
     const res = await apiGet('/ai/analysis');
     return res.data as any;
   },
-  feedback: async (text: string) => {
-    const res = await apiPost('/ai/feedback', { text });
+  feedback: async (text: string, provider?: 'ollama' | 'openai', model?: string) => {
+    const res = await apiPost('/ai/feedback', { text, provider, model });
     return res.data as any;
   },
   outline: async (topic: string) => {

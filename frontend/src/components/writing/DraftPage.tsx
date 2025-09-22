@@ -10,7 +10,17 @@ export const DraftPage: React.FC = () => {
   const getFeedback = async () => {
     setLoading(true);
     try {
-      const data = await aiService.feedback(text);
+      let provider: 'ollama' | 'openai' | undefined;
+      let model: string | undefined;
+      try {
+        const raw = localStorage.getItem('aiProviderSelection');
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          provider = parsed.provider;
+          model = parsed.model;
+        }
+      } catch {}
+      const data = await aiService.feedback(text, provider, model);
       setFeedback(data);
     } finally { setLoading(false); }
   };

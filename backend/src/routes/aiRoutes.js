@@ -1,6 +1,7 @@
 import express from 'express';
 import { protect, authorize } from '../middleware/authMiddleware.js';
 import OpenAI from 'openai';
+import axios from 'axios';
 
 const router = express.Router();
 
@@ -21,22 +22,70 @@ const generateRecommendations = (req, res) => {
   res.json({ success: true, message: 'AI Recommendations placeholder', data: ['Practice outlines', 'Focus on cohesion'] });
 };
 
+const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
+
+const fetchOllamaModels = async () => {
+  try {
+    const resp = await axios.get(`${OLLAMA_BASE_URL}/api/tags`, { timeout: 5000 });
+    const models = Array.isArray(resp.data?.models) ? resp.data.models.map(m => m.name) : [];
+    return { available: true, models };
+  } catch (err) {
+    return { available: false, models: [], error: err?.message };
+  }
+};
+
+const generateWithOllama = async (model, prompt) => {
+  const body = { model, prompt, stream: false, options: { temperature: 0.2 } };
+  const resp = await axios.post(`${OLLAMA_BASE_URL}/api/generate`, body, { timeout: 30000 });
+  return resp.data?.response || '';
+};
+
+const getModels = async (req, res) => {
+  try {
+    const ollama = await fetchOllamaModels();
+    const openaiAvailable = !!process.env.OPENAI_API_KEY;
+    const data = {
+      providers: {
+        ollama: { available: ollama.available, models: ollama.models },
+        openai: { available: openaiAvailable, models: [] }
+      },
+      defaults: {
+        provider: ollama.available ? 'ollama' : (openaiAvailable ? 'openai' : 'none'),
+        model: ollama.available ? (process.env.OLLAMA_MODEL || (ollama.models[0] || 'llama3.1')) : (process.env.OPENAI_MODEL || 'gpt-4o-mini')
+      }
+    };
+    return res.json({ success: true, message: 'AI providers and models', data });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: err?.message || 'Failed to get models' });
+  }
+};
+
 const getInstantFeedback = async (req, res) => {
-  const { text } = req.body || {};
+  const { text, provider, model } = req.body || {};
   if (!text || typeof text !== 'string' || text.trim().length === 0) {
     return res.status(400).json({ success: false, message: 'Text is required' });
   }
 
   try {
-    if (!process.env.OPENAI_API_KEY) throw new Error('Missing OPENAI_API_KEY');
-    const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    const chosenProvider = provider || (process.env.OPENAI_API_KEY ? 'openai' : 'ollama');
     const prompt = `Provide concise writing feedback for the following student draft. Return JSON with keys sentenceFeedback (array of brief suggestions) and holisticFeedback (one paragraph). Draft:\n\n${text}`;
-    const completion = await client.chat.completions.create({
-      model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0.3,
-    });
-    const content = completion.choices?.[0]?.message?.content || '';
+    let content = '';
+
+    if (chosenProvider === 'ollama') {
+      const ollamaInfo = await fetchOllamaModels();
+      if (!ollamaInfo.available) throw new Error('Ollama is not available');
+      const selectedModel = model || process.env.OLLAMA_MODEL || ollamaInfo.models[0] || 'llama3.1';
+      content = await generateWithOllama(selectedModel, prompt);
+    } else {
+      if (!process.env.OPENAI_API_KEY) throw new Error('Missing OPENAI_API_KEY');
+      const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+      const completion = await client.chat.completions.create({
+        model: model || process.env.OPENAI_MODEL || 'gpt-4o-mini',
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.3,
+      });
+      content = completion.choices?.[0]?.message?.content || '';
+    }
     // Try to parse JSON; if not JSON, wrap as holistic
     let data;
     try { data = JSON.parse(content); } catch {
@@ -91,6 +140,7 @@ const getTeacherOverview = (req, res) => {
 };
 
 // Routes
+router.get('/models', protect, getModels);
 router.get('/analysis', protect, getAIAnalysis);
 router.post('/recommendations', protect, generateRecommendations);
 router.post('/feedback', protect, getInstantFeedback);
