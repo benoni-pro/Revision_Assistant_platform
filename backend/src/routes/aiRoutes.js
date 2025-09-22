@@ -1,28 +1,11 @@
 import express from 'express';
-<<<<<<< Updated upstream
 import { protect, authorize } from '../middleware/authMiddleware.js';
 import OpenAI from 'openai';
 import axios from 'axios';
 
 const router = express.Router();
 
-// Mock/placeholder AI controllers (to be replaced with real ML integration)
-const getAIAnalysis = (req, res) => {
-  res.json({
-    success: true,
-    message: 'AI Analysis placeholder',
-    data: {
-      strengths: ['Clear thesis', 'Strong topic sentences'],
-      weaknesses: ['Run-on sentences', 'Weak conclusion'],
-      suggestions: ['Break long sentences', 'Add concluding synthesis']
-    }
-  });
-};
-
-const generateRecommendations = (req, res) => {
-  res.json({ success: true, message: 'AI Recommendations placeholder', data: ['Practice outlines', 'Focus on cohesion'] });
-};
-
+// Ollama/OpenAI helpers
 const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
 
 const fetchOllamaModels = async () => {
@@ -39,6 +22,23 @@ const generateWithOllama = async (model, prompt) => {
   const body = { model, prompt, stream: false, options: { temperature: 0.2 } };
   const resp = await axios.post(`${OLLAMA_BASE_URL}/api/generate`, body, { timeout: 30000 });
   return resp.data?.response || '';
+};
+
+// Core endpoints
+const getAIAnalysis = (req, res) => {
+  res.json({
+    success: true,
+    message: 'AI Analysis placeholder',
+    data: {
+      strengths: ['Clear thesis', 'Strong topic sentences'],
+      weaknesses: ['Run-on sentences', 'Weak conclusion'],
+      suggestions: ['Break long sentences', 'Add concluding synthesis']
+    }
+  });
+};
+
+const generateRecommendations = (req, res) => {
+  res.json({ success: true, message: 'AI Recommendations placeholder', data: ['Practice outlines', 'Focus on cohesion'] });
 };
 
 const getModels = async (req, res) => {
@@ -87,31 +87,64 @@ const getInstantFeedback = async (req, res) => {
       });
       content = completion.choices?.[0]?.message?.content || '';
     }
-    // Try to parse JSON; if not JSON, wrap as holistic
+
     let data;
     try { data = JSON.parse(content); } catch {
       data = { sentenceFeedback: [], holisticFeedback: content };
-=======
-import { protect } from '../middleware/authMiddleware.js';
+    }
+    return res.json({ success: true, message: 'Instant feedback', data });
+  } catch (err) {
+    const length = (text || '').length;
+    const issues = [];
+    if (length < 30) issues.push('Your writing is very short; add more detail.');
+    if ((text || '').split(',').length > 5) issues.push('Consider splitting long sentences to improve readability.');
+    return res.json({ success: true, message: 'Instant feedback (fallback)', data: {
+      sentenceFeedback: issues,
+      holisticFeedback: length > 200 ? 'Good development. Consider refining transitions.' : 'Needs more development and clearer structure.'
+    }});
+  }
+};
 
-const router = express.Router();
+const getOutline = (req, res) => {
+  const { topic } = req.body || {};
+  res.json({ success: true, message: 'Outline generated', data: {
+    thesis: `Thesis about ${topic || 'your topic'}`,
+    sections: [
+      { heading: 'Introduction', bullets: ['Hook', 'Context', 'Thesis'] },
+      { heading: 'Body Paragraph 1', bullets: ['Topic sentence', 'Evidence', 'Analysis'] },
+      { heading: 'Body Paragraph 2', bullets: ['Topic sentence', 'Evidence', 'Analysis'] },
+      { heading: 'Conclusion', bullets: ['Summary', 'Implications', 'Closing thought'] }
+    ]
+  }});
+};
 
-// AI-powered quiz generation
+const getGenrePrompts = (req, res) => {
+  const { genre } = req.query;
+  const prompts = {
+    argumentative: ['Argue for or against school uniforms.', 'Should homework be limited?'],
+    narrative: ['Write about a time you overcame a challenge.', 'Tell a story about an unexpected journey.'],
+    informative: ['Explain how photosynthesis works.', 'Describe the impact of social media on communication.']
+  };
+  res.json({ success: true, message: 'Genre prompts', data: { prompts: prompts[genre] || prompts.argumentative } });
+};
+
+const getTeacherOverview = (req, res) => {
+  res.json({ success: true, message: 'Teacher overview', data: {
+    classes: 3,
+    students: 92,
+    avgWritingScore: 76,
+    atRisk: 12,
+    commonIssues: ['Organization', 'Evidence integration']
+  }});
+};
+
+// Additional AI feature endpoints (mock implementations)
 router.post('/generate-quiz', protect, async (req, res) => {
   try {
     const { subject, topic, level, questionCount, questionTypes, difficulty } = req.body;
-    
-    // Validate input
     if (!subject || !topic) {
-      return res.status(400).json({
-        success: false,
-        message: 'Subject and topic are required'
-      });
->>>>>>> Stashed changes
+      return res.status(400).json({ success: false, message: 'Subject and topic are required' });
     }
-
-    // Here you would integrate with Ollama or another AI service
-    // For now, return a mock response
     const mockQuiz = {
       title: `${subject} - ${topic} Quiz`,
       description: `A ${level} level quiz about ${topic}`,
@@ -135,34 +168,19 @@ router.post('/generate-quiz', protect, async (req, res) => {
       createdBy: req.user._id,
       aiGenerated: true
     };
-
-    res.json({
-      success: true,
-      message: 'Quiz generated successfully',
-      data: mockQuiz
-    });
+    res.json({ success: true, message: 'Quiz generated successfully', data: mockQuiz });
   } catch (error) {
     console.error('Quiz generation error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to generate quiz'
-    });
+    res.status(500).json({ success: false, message: 'Failed to generate quiz' });
   }
 });
 
-// AI study guide generation
 router.post('/generate-study-guide', protect, async (req, res) => {
   try {
     const { subject, topic, level, format, focusAreas } = req.body;
-    
     if (!subject || !topic) {
-      return res.status(400).json({
-        success: false,
-        message: 'Subject and topic are required'
-      });
+      return res.status(400).json({ success: false, message: 'Subject and topic are required' });
     }
-
-    // Mock study guide response
     const mockGuide = {
       title: `${subject} - ${topic} Study Guide`,
       subject,
@@ -194,44 +212,19 @@ router.post('/generate-study-guide', protect, async (req, res) => {
       generatedAt: new Date(),
       generatedBy: req.user._id
     };
-
-    res.json({
-      success: true,
-      message: 'Study guide generated successfully',
-      data: mockGuide
-    });
+    res.json({ success: true, message: 'Study guide generated successfully', data: mockGuide });
   } catch (error) {
     console.error('Study guide generation error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to generate study guide'
-    });
+    res.status(500).json({ success: false, message: 'Failed to generate study guide' });
   }
 });
 
-<<<<<<< Updated upstream
-// Routes
-router.get('/models', protect, getModels);
-router.get('/analysis', protect, getAIAnalysis);
-router.post('/recommendations', protect, generateRecommendations);
-router.post('/feedback', protect, getInstantFeedback);
-router.post('/outline', protect, getOutline);
-router.get('/prompts', protect, getGenrePrompts);
-router.get('/teacher-overview', protect, authorize('teacher', 'manager', 'admin'), getTeacherOverview);
-=======
-// AI concept explanation
 router.post('/explain-concept', protect, async (req, res) => {
   try {
     const { concept, subject, level, context } = req.body;
-    
     if (!concept || !subject) {
-      return res.status(400).json({
-        success: false,
-        message: 'Concept and subject are required'
-      });
+      return res.status(400).json({ success: false, message: 'Concept and subject are required' });
     }
-
-    // Mock explanation response
     const mockExplanation = {
       concept,
       subject,
@@ -239,60 +232,34 @@ router.post('/explain-concept', protect, async (req, res) => {
       context,
       explanation: {
         definition: `${concept} is a fundamental concept in ${subject} that...`,
-        keyPoints: [
-          'Point 1: Core understanding',
-          'Point 2: Practical applications',
-          'Point 3: Related concepts'
-        ],
-        examples: [
-          'Real-world example 1',
-          'Real-world example 2'
-        ],
-        commonMisconceptions: [
-          'Misconception 1 and why it\'s wrong',
-          'Misconception 2 and the correct understanding'
-        ],
-        furtherReading: [
-          'Resource 1 for deeper understanding',
-          'Resource 2 for practical applications'
-        ]
+        keyPoints: ['Point 1: Core understanding', 'Point 2: Practical applications', 'Point 3: Related concepts'],
+        examples: ['Real-world example 1', 'Real-world example 2'],
+        commonMisconceptions: ["Misconception 1 and why it's wrong", 'Misconception 2 and the correct understanding'],
+        furtherReading: ['Resource 1 for deeper understanding', 'Resource 2 for practical applications']
       },
       generatedAt: new Date(),
       generatedBy: req.user._id
     };
-
-    res.json({
-      success: true,
-      message: 'Concept explanation generated successfully',
-      data: mockExplanation
-    });
+    res.json({ success: true, message: 'Concept explanation generated successfully', data: mockExplanation });
   } catch (error) {
     console.error('Concept explanation error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to generate concept explanation'
-    });
+    res.status(500).json({ success: false, message: 'Failed to generate concept explanation' });
   }
 });
 
-// AI study plan generation
 router.post('/generate-study-plan', protect, async (req, res) => {
   try {
     const { subjects, timeAvailable, goals, deadline, currentLevel } = req.body;
-    
     if (!subjects || !goals) {
-      return res.status(400).json({
-        success: false,
-        message: 'Subjects and goals are required'
-      });
+      return res.status(400).json({ success: false, message: 'Subjects and goals are required' });
     }
-
-    // Mock study plan response
+    const subjectsArray = Array.isArray(subjects) ? subjects : String(subjects).split(',').map(s => s.trim());
+    const goalsArray = Array.isArray(goals) ? goals : String(goals).split(',').map(s => s.trim());
     const mockPlan = {
       title: 'Personalized Study Plan',
-      subjects: Array.isArray(subjects) ? subjects : subjects.split(',').map(s => s.trim()),
+      subjects: subjectsArray,
       timeAvailable,
-      goals: Array.isArray(goals) ? goals : goals.split(',').map(s => s.trim()),
+      goals: goalsArray,
       deadline,
       currentLevel,
       plan: {
@@ -311,53 +278,29 @@ router.post('/generate-study-plan', protect, async (req, res) => {
           { week: 3, goal: 'Advanced topics', subjects: ['Subject 2', 'Subject 3'] },
           { week: 4, goal: 'Review and assessment', subjects: ['All subjects'] }
         ],
-        studyTechniques: [
-          'Active recall for memorization',
-          'Spaced repetition for long-term retention',
-          'Practice testing for exam preparation',
-          'Interleaving for better understanding'
-        ],
-        resources: [
-          'Textbook chapters 1-5',
-          'Online video series',
-          'Practice problem sets',
-          'Study group discussions'
-        ]
+        studyTechniques: ['Active recall', 'Spaced repetition', 'Practice testing', 'Interleaving'],
+        resources: ['Textbook chapters 1-5', 'Online video series', 'Practice problem sets', 'Study group discussions']
       },
       generatedAt: new Date(),
       generatedBy: req.user._id
     };
-
-    res.json({
-      success: true,
-      message: 'Study plan generated successfully',
-      data: mockPlan
-    });
+    res.json({ success: true, message: 'Study plan generated successfully', data: mockPlan });
   } catch (error) {
     console.error('Study plan generation error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to generate study plan'
-    });
+    res.status(500).json({ success: false, message: 'Failed to generate study plan' });
   }
 });
 
-// AI learning analytics
 router.post('/analyze-progress', protect, async (req, res) => {
   try {
     const { subject, scores, topics } = req.body;
-    
-    // Mock analytics response
+    const avg = Array.isArray(scores) && scores.length > 0 ? (scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
     const mockAnalytics = {
       subject,
-      overallPerformance: {
-        averageScore: scores.reduce((a, b) => a + b, 0) / scores.length,
-        trend: 'improving',
-        consistency: 'good'
-      },
-      topicAnalysis: topics.map(topic => ({
+      overallPerformance: { averageScore: avg, trend: 'improving', consistency: 'good' },
+      topicAnalysis: (Array.isArray(topics) ? topics : []).map(topic => ({
         topic,
-        performance: Math.random() * 100,
+        performance: Math.round(Math.random() * 100),
         recommendations: ['Focus on practice problems', 'Review key concepts']
       })),
       recommendations: [
@@ -371,22 +314,23 @@ router.post('/analyze-progress', protect, async (req, res) => {
         'Schedule regular review sessions'
       ],
       generatedAt: new Date(),
-      generatedBy: req.user._id
+      generatedBy: req.user?._id
     };
-
-    res.json({
-      success: true,
-      message: 'Progress analysis completed',
-      data: mockAnalytics
-    });
+    res.json({ success: true, message: 'Progress analysis completed', data: mockAnalytics });
   } catch (error) {
     console.error('Progress analysis error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to analyze progress'
-    });
+    res.status(500).json({ success: false, message: 'Failed to analyze progress' });
   }
 });
->>>>>>> Stashed changes
+
+// Bind routes
+router.get('/models', protect, getModels);
+router.get('/analysis', protect, getAIAnalysis);
+router.post('/recommendations', protect, generateRecommendations);
+router.post('/feedback', protect, getInstantFeedback);
+router.post('/outline', protect, getOutline);
+router.get('/prompts', protect, getGenrePrompts);
+router.get('/teacher-overview', protect, authorize('teacher', 'manager', 'admin'), getTeacherOverview);
 
 export default router;
+

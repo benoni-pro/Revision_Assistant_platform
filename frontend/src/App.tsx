@@ -18,8 +18,6 @@ import OutlinePage from './components/writing/OutlinePage';
 import DraftPage from './components/writing/DraftPage';
 import TeacherDashboard from './components/teacher/TeacherDashboard';
 import RubricsPage from './components/teacher/RubricsPage';
-import SettingsPage from './components/settings/SettingsPage';
-
 import Settings from "./components/settings/Settings";
 // Protected Route component
 interface ProtectedRouteProps {
@@ -340,7 +338,7 @@ function App() {
                 </ProtectedRoute>
               }
             >
-              <Route index element={<SettingsPage />} />
+              <Route index element={<Settings />} />
             </Route>
             
             <Route
