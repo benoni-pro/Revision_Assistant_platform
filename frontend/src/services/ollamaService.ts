@@ -41,7 +41,7 @@ export interface StudyPlanRequest {
 
 class OllamaService {
   private baseUrl = 'http://localhost:11434';
-  private defaultModel = 'llama3.2:latest';
+  private defaultModel = 'llama2:latest';
 
   async generateQuiz(request: QuizGenerationRequest): Promise<any> {
     const prompt = this.buildQuizPrompt(request);
