@@ -42,7 +42,7 @@ export interface StudyPlanRequest {
 class OllamaService {
   private baseUrl = 'http://localhost:11434';
   private defaultModel = 'mistral:latest';
-  private requestTimeoutMs = Number((import.meta as any).env?.VITE_OLLAMA_TIMEOUT_MS || 45000);
+  private requestTimeoutMs = Number((import.meta as any).env?.VITE_OLLAMA_TIMEOUT_MS ?? 0);
 
   async generateQuiz(request: QuizGenerationRequest): Promise<any> {
     const prompt = this.buildQuizPrompt(request);
@@ -86,9 +86,9 @@ class OllamaService {
 
   private async callOllama(prompt: string, type: string): Promise<any> {
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), this.requestTimeoutMs);
-      const response = await fetch(`${this.baseUrl}/api/generate`, {
+      const controller = this.requestTimeoutMs > 0 ? new AbortController() : null;
+      const timeoutId = this.requestTimeoutMs > 0 ? setTimeout(() => controller!.abort(), this.requestTimeoutMs) : null;
+      const fetchOptions: RequestInit = {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -102,11 +102,12 @@ class OllamaService {
             top_p: 0.9,
             max_tokens: 2000
           }
-        }),
-        signal: controller.signal
-      });
+        })
+      };
+      if (controller) fetchOptions.signal = controller.signal;
+      const response = await fetch(`${this.baseUrl}/api/generate`, fetchOptions);
 
-      clearTimeout(timeoutId);
+      if (timeoutId) clearTimeout(timeoutId as any);
 
       if (!response.ok) {
         throw new Error(`Ollama API error: ${response.statusText}`);
