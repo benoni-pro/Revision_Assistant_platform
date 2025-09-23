@@ -8,7 +8,7 @@ const API_BASE_URL = envBase || (import.meta.env.DEV ? '/api' : 'http://localhos
 // Create axios instance with default config
 export const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 30000,
+  timeout: 10000,
   headers: { 'Content-Type': 'application/json' },
   withCredentials: true,
 });

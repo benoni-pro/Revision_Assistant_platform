@@ -85,6 +85,8 @@ class OllamaService {
 
   private async callOllama(prompt: string, type: string): Promise<any> {
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 12000);
       const response = await fetch(`${this.baseUrl}/api/generate`, {
         method: 'POST',
         headers: {
@@ -99,8 +101,11 @@ class OllamaService {
             top_p: 0.9,
             max_tokens: 2000
           }
-        })
+        }),
+        signal: controller.signal
       });
+
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
         throw new Error(`Ollama API error: ${response.statusText}`);
