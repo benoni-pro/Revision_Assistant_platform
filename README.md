@@ -77,6 +77,9 @@ A comprehensive AI-powered learning platform designed to transform the education
    SMTP_PORT=587
    SMTP_USER=your-email@gmail.com
    SMTP_PASS=your-app-password
+
+   # RapidAPI (Balancing Studies)
+   RAPIDAPI_BALANCING_STUDIES_KEY=your-rapidapi-key
    ```
 
 5. Start the development server:
@@ -179,6 +182,22 @@ Revision_Assistant_platform/
 │   ├── public/             # Static assets
 │   └── package.json
 └── README.md
+```
+
+## 🔗 Balancing Studies Integration (RapidAPI)
+
+- Backend proxy endpoint: `GET /api/resources/balancing-studies`
+- Query params:
+  - `path` (optional): appended to the upstream URL, e.g. `topics` or `categories/math`
+  - Any additional query params are forwarded, e.g. `subject=math&level=beginner`
+- Requires auth (Bearer). Backend uses `RAPIDAPI_BALANCING_STUDIES_KEY`.
+
+Frontend example:
+
+```ts
+import { fetchBalancingStudies } from 'frontend/src/services/balancingStudiesService';
+
+const data = await fetchBalancingStudies({ path: 'topics', subject: 'math' });
 ```
 
 ## 🤝 Contributing

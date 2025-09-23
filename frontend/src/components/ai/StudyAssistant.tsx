@@ -4,24 +4,19 @@ import {
   CpuChipIcon, 
   BookOpenIcon, 
   LightBulbIcon,
-  AcademicCapIcon,
-  SparklesIcon,
   ChatBubbleLeftRightIcon,
   DocumentTextIcon,
   ClipboardDocumentListIcon
 } from '@heroicons/react/24/outline';
-import OllamaService, { 
-  StudyGuideRequest, 
-  ExplanationRequest, 
-  StudyPlanRequest 
-} from '../../services/ollamaService';
+import OllamaService from '../../services/ollamaService';
+import { fetchBalancingStudies } from '../../services/balancingStudiesService';
 
 interface StudyAssistantProps {
   onClose: () => void;
 }
 
 const StudyAssistant: React.FC<StudyAssistantProps> = ({ onClose }) => {
-  const [activeTab, setActiveTab] = useState<'explain' | 'guide' | 'plan' | 'chat'>('explain');
+  const [activeTab, setActiveTab] = useState<'explain' | 'guide' | 'plan' | 'chat' | 'resources'>('explain');
   const [isLoading, setIsLoading] = useState(false);
   const [response, setResponse] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
@@ -57,6 +52,12 @@ const StudyAssistant: React.FC<StudyAssistantProps> = ({ onClose }) => {
     message: ''
   });
   const [chatHistory, setChatHistory] = useState<Array<{role: 'user' | 'assistant', content: string}>>([]);
+
+  // Resources (Balancing Studies) form
+  const [resourcesForm, setResourcesForm] = useState({
+    path: '',
+    query: '' // key=value&key2=value2
+  });
 
   const subjects = [
     'Mathematics', 'Physics', 'Chemistry', 'Biology', 'Computer Science',
@@ -163,6 +164,29 @@ const StudyAssistant: React.FC<StudyAssistantProps> = ({ onClose }) => {
     }
   };
 
+  const handleFetchResources = async () => {
+    setIsLoading(true);
+    setError(null);
+    setResponse(null);
+
+    try {
+      const params: Record<string, any> = {};
+      if (resourcesForm.path) params.path = resourcesForm.path;
+      if (resourcesForm.query) {
+        resourcesForm.query.split('&').forEach(pair => {
+          const [k, v] = pair.split('=');
+          if (k) params[k.trim()] = (v || '').trim();
+        });
+      }
+      const data = await fetchBalancingStudies(params);
+      setResponse(data);
+    } catch (err: any) {
+      setError(err?.message || 'Failed to fetch resources.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const renderExplainTab = () => (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -238,6 +262,55 @@ const StudyAssistant: React.FC<StudyAssistantProps> = ({ onClose }) => {
           <>
             <LightBulbIcon className="h-4 w-4 mr-2" />
             Explain Concept
+          </>
+        )}
+      </button>
+    </div>
+  );
+
+  const renderResourcesTab = () => (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Optional Path
+          </label>
+          <input
+            type="text"
+            value={resourcesForm.path}
+            onChange={(e) => setResourcesForm({...resourcesForm, path: e.target.value})}
+            placeholder="e.g., topics or categories/math"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Query (key=value&key2=value2)
+          </label>
+          <input
+            type="text"
+            value={resourcesForm.query}
+            onChange={(e) => setResourcesForm({...resourcesForm, query: e.target.value})}
+            placeholder="e.g., subject=math&level=beginner"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+      </div>
+
+      <button
+        onClick={handleFetchResources}
+        disabled={isLoading}
+        className="w-full px-6 py-3 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+      >
+        {isLoading ? (
+          <>
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+            Fetching...
+          </>
+        ) : (
+          <>
+            <DocumentTextIcon className="h-4 w-4 mr-2" />
+            Fetch Balancing Studies
           </>
         )}
       </button>
@@ -533,6 +606,7 @@ const StudyAssistant: React.FC<StudyAssistantProps> = ({ onClose }) => {
               { id: 'explain', label: 'Explain', icon: LightBulbIcon },
               { id: 'guide', label: 'Study Guide', icon: BookOpenIcon },
               { id: 'plan', label: 'Study Plan', icon: ClipboardDocumentListIcon },
+              { id: 'resources', label: 'Resources', icon: DocumentTextIcon },
               { id: 'chat', label: 'Chat', icon: ChatBubbleLeftRightIcon }
             ].map(tab => {
               const Icon = tab.icon;
@@ -562,6 +636,7 @@ const StudyAssistant: React.FC<StudyAssistantProps> = ({ onClose }) => {
           {activeTab === 'explain' && renderExplainTab()}
           {activeTab === 'guide' && renderGuideTab()}
           {activeTab === 'plan' && renderPlanTab()}
+          {activeTab === 'resources' && renderResourcesTab()}
           {activeTab === 'chat' && renderChatTab()}
 
           {renderResponse()}
