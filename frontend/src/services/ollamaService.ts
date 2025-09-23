@@ -42,6 +42,7 @@ export interface StudyPlanRequest {
 class OllamaService {
   private baseUrl = 'http://localhost:11434';
   private defaultModel = 'mistral:latest';
+  private requestTimeoutMs = Number((import.meta as any).env?.VITE_OLLAMA_TIMEOUT_MS || 45000);
 
   async generateQuiz(request: QuizGenerationRequest): Promise<any> {
     const prompt = this.buildQuizPrompt(request);
@@ -86,7 +87,7 @@ class OllamaService {
   private async callOllama(prompt: string, type: string): Promise<any> {
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 12000);
+      const timeoutId = setTimeout(() => controller.abort(), this.requestTimeoutMs);
       const response = await fetch(`${this.baseUrl}/api/generate`, {
         method: 'POST',
         headers: {
