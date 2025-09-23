@@ -52,7 +52,7 @@ const getModels = async (req, res) => {
       },
       defaults: {
         provider: ollama.available ? 'ollama' : (openaiAvailable ? 'openai' : 'none'),
-        model: ollama.available ? (process.env.OLLAMA_MODEL || (ollama.models[0] || 'llama2:latest')) : (process.env.OPENAI_MODEL || 'gpt-4o-mini')
+        model: ollama.available ? (process.env.OLLAMA_MODEL || (ollama.models[0] || 'mistral:latest')) : (process.env.OPENAI_MODEL || 'gpt-4o-mini')
       }
     };
     return res.json({ success: true, message: 'AI providers and models', data });
@@ -75,7 +75,7 @@ const getInstantFeedback = async (req, res) => {
     if (chosenProvider === 'ollama') {
       const ollamaInfo = await fetchOllamaModels();
       if (!ollamaInfo.available) throw new Error('Ollama is not available');
-      const selectedModel = model || process.env.OLLAMA_MODEL || ollamaInfo.models[0] || 'llama2:latest';
+      const selectedModel = model || process.env.OLLAMA_MODEL || ollamaInfo.models[0] || 'mistral:latest';
       content = await generateWithOllama(selectedModel, prompt);
     } else {
       if (!process.env.OPENAI_API_KEY) throw new Error('Missing OPENAI_API_KEY');
