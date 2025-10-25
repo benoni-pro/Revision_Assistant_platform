@@ -1,0 +1,63 @@
+================================================================================
+RENDER BACKEND ENVIRONMENT VARIABLES
+================================================================================
+
+Copy and paste these environment variables into your Render dashboard:
+
+================================================================================
+REQUIRED VARIABLES
+================================================================================
+
+NODE_ENV=production
+
+PORT=5000
+
+FRONTEND_URLS=https://revision-assistant-platform.vercel.app,https://revision-assistant-platform-git-main-mutangana-benonis-projects.vercel.app,https://revision-assistant-platform-nrcqj3h6f.vercel.app,http://localhost:3000
+
+MONGODB_URI=<YOUR_MONGODB_CONNECTION_STRING>
+
+JWT_SECRET=<YOUR_JWT_SECRET>
+
+JWT_REFRESH_SECRET=<YOUR_JWT_REFRESH_SECRET>
+
+JWT_EXPIRES_IN=15m
+
+JWT_REFRESH_EXPIRES_IN=30d
+
+================================================================================
+OPTIONAL VARIABLES
+================================================================================
+
+RATE_LIMIT_WINDOW=900000
+
+RATE_LIMIT_MAX=100
+
+EMAIL_FROM=Revision Assistant <no-reply@revision-assistant.com>
+
+================================================================================
+STEPS TO ADD TO RENDER
+================================================================================
+
+1. Go to: https://dashboard.render.com
+2. Select your backend service: revision-assistant-platform
+3. Click on "Environment" tab
+4. Click "Add Environment Variable"
+5. Copy each variable name and value from above
+6. Click "Save Changes"
+7. Wait for automatic redeploy (2-3 minutes)
+
+================================================================================
+VERIFY DEPLOYMENT
+================================================================================
+
+After redeploy completes, test:
+
+1. Backend Health:
+   curl https://revision-assistant-platform.onrender.com/api/health
+
+2. Frontend Connection:
+   Open https://revision-assistant-platform.vercel.app
+   Open browser console
+   Check for CORS errors (there should be none)
+
+================================================================================

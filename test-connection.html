@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connection Test - Revision Assistant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f7fafc;
+            border-radius: 8px;
+            border: 2px solid #e2e8f0;
+        }
+        
+        .test-section h3 {
+            color: #2d3748;
+            margin-bottom: 15px;
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            margin: 10px 0;
+        }
+        
+        .status.pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .status.success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .status.error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .url {
+            background: #1e293b;
+            color: #10b981;
+            padding: 12px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            margin: 10px 0;
+            word-break: break-all;
+        }
+        
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .response {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            margin: 10px 0;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .check {
+            margin: 15px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .check-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        .check-icon.success {
+            background: #10b981;
+            color: white;
+        }
+        
+        .check-icon.error {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .check-icon.pending {
+            background: #f59e0b;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔗 Connection Test</h1>
+        <p class="subtitle">Revision Assistant Platform - Vercel ↔️ Render</p>
+        
+        <div class="test-section">
+            <h3>📍 Your URLs</h3>
+            <div style="margin-bottom: 10px;">
+                <strong>Frontend (Vercel):</strong>
+                <div class="url">https://revision-assistant-platform.vercel.app</div>
+            </div>
+            <div>
+                <strong>Backend (Render):</strong>
+                <div class="url">https://revision-assistant-platform.onrender.com/api</div>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h3>🧪 Connection Tests</h3>
+            <button onclick="runAllTests()" id="testBtn">Run All Tests</button>
+            
+            <div id="test1" class="check" style="display: none;">
+                <div class="check-icon pending">1</div>
+                <span>Backend Health Check...</span>
+            </div>
+            
+            <div id="test2" class="check" style="display: none;">
+                <div class="check-icon pending">2</div>
+                <span>CORS Verification...</span>
+            </div>
+            
+            <div id="test3" class="check" style="display: none;">
+                <div class="check-icon pending">3</div>
+                <span>API Endpoints Availability...</span>
+            </div>
+            
+            <div id="results" style="margin-top: 20px;"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>📝 Instructions</h3>
+            <ol style="line-height: 2; padding-left: 20px;">
+                <li>Click "Run All Tests" button above</li>
+                <li>Check if all tests pass ✅</li>
+                <li>If any test fails ❌, update your Render environment variables</li>
+                <li>Make sure <code>FRONTEND_URLS</code> includes all your Vercel URLs</li>
+                <li>Wait 2-3 minutes for Render to redeploy after changes</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        const BACKEND_URL = 'https://revision-assistant-platform.onrender.com';
+        
+        async function runAllTests() {
+            const btn = document.getElementById('testBtn');
+            btn.disabled = true;
+            btn.textContent = 'Testing...';
+            
+            document.getElementById('results').innerHTML = '';
+            
+            // Test 1: Health Check
+            await test1_healthCheck();
+            
+            // Test 2: CORS
+            await test2_cors();
+            
+            // Test 3: API Endpoints
+            await test3_endpoints();
+            
+            btn.disabled = false;
+            btn.textContent = 'Run Tests Again';
+        }
+        
+        async function test1_healthCheck() {
+            const el = document.getElementById('test1');
+            el.style.display = 'flex';
+            
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/health`, {
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                
+                if (response.ok) {
+                    updateTest('test1', 'success', 'Backend Health Check - Passed ✅');
+                    addResult('success', 'Backend is running!', JSON.stringify(data, null, 2));
+                } else {
+                    updateTest('test1', 'error', 'Backend Health Check - Failed ❌');
+                    addResult('error', `HTTP ${response.status}`, JSON.stringify(data, null, 2));
+                }
+            } catch (error) {
+                updateTest('test1', 'error', 'Backend Health Check - Error ❌');
+                addResult('error', 'Connection Error', error.message);
+            }
+        }
+        
+        async function test2_cors() {
+            const el = document.getElementById('test2');
+            el.style.display = 'flex';
+            
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/health`, {
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const corsHeaders = {
+                    'Access-Control-Allow-Origin': response.headers.get('Access-Control-Allow-Origin'),
+                    'Access-Control-Allow-Credentials': response.headers.get('Access-Control-Allow-Credentials')
+                };
+                
+                if (response.ok && corsHeaders['Access-Control-Allow-Origin']) {
+                    updateTest('test2', 'success', 'CORS Configuration - Passed ✅');
+                    addResult('success', 'CORS is properly configured', JSON.stringify(corsHeaders, null, 2));
+                } else {
+                    updateTest('test2', 'error', 'CORS Configuration - Failed ❌');
+                    addResult('error', 'CORS headers missing', 'Check backend FRONTEND_URLS configuration');
+                }
+            } catch (error) {
+                updateTest('test2', 'error', 'CORS Configuration - Error ❌');
+                addResult('error', 'CORS Error', error.message + '\n\nMake sure FRONTEND_URLS includes your Vercel URL');
+            }
+        }
+        
+        async function test3_endpoints() {
+            const el = document.getElementById('test3');
+            el.style.display = 'flex';
+            
+            const endpoints = [
+                '/api/auth/register',
+                '/api/quizzes',
+                '/api/study-groups',
+                '/api/resources'
+            ];
+            
+            let allPassed = true;
+            let results = {};
+            
+            for (const endpoint of endpoints) {
+                try {
+                    const response = await fetch(`${BACKEND_URL}${endpoint}`, {
+                        credentials: 'include'
+                    });
+                    
+                    // 401/403 means endpoint exists but requires auth (good)
+                    const isAvailable = response.status === 200 || response.status === 401 || response.status === 403;
+                    results[endpoint] = isAvailable ? '✅' : '❌';
+                    
+                    if (!isAvailable) allPassed = false;
+                } catch (error) {
+                    results[endpoint] = '❌';
+                    allPassed = false;
+                }
+            }
+            
+            if (allPassed) {
+                updateTest('test3', 'success', 'API Endpoints - All Available ✅');
+                addResult('success', 'All endpoints are accessible', JSON.stringify(results, null, 2));
+            } else {
+                updateTest('test3', 'error', 'API Endpoints - Some Unavailable ❌');
+                addResult('error', 'Some endpoints are not accessible', JSON.stringify(results, null, 2));
+            }
+        }
+        
+        function updateTest(id, status, text) {
+            const el = document.getElementById(id);
+            const icon = el.querySelector('.check-icon');
+            icon.className = `check-icon ${status}`;
+            icon.textContent = status === 'success' ? '✓' : '✗';
+            el.querySelector('span').textContent = text;
+        }
+        
+        function addResult(type, title, content) {
+            const resultsDiv = document.getElementById('results');
+            const resultEl = document.createElement('div');
+            resultEl.innerHTML = `
+                <div style="margin: 15px 0;">
+                    <span class="status ${type}">${title}</span>
+                    <pre class="response">${content}</pre>
+                </div>
+            `;
+            resultsDiv.appendChild(resultEl);
+        }
+    </script>
+</body>
+</html>
