@@ -23,44 +23,15 @@ import { Button } from '../ui/Button';
 import AIGeneratedQuiz from '../quizzes/AIGeneratedQuiz';
 import StudyAssistant from '../ai/StudyAssistant';
 import OllamaService from '../../services/ollamaService';
-
-// Mock data - replace with real data from API
-const mockStats = {
-  todayStudyTime: 45,
-  weeklyGoal: 300,
-  currentStreak: 7,
-  longestStreak: 21,
-  completedQuizzes: 23,
-  averageScore: 87,
-  studyGroups: 3,
-  achievements: 12,
-};
-
-const mockRecentActivity = [
-  { id: 1, type: 'quiz', title: 'JavaScript Fundamentals Quiz', score: 92, time: '2 hours ago' },
-  { id: 2, type: 'study', title: 'React Hooks Study Session', duration: 45, time: '4 hours ago' },
-  { id: 3, type: 'group', title: 'Joined "Web Development Bootcamp"', time: '1 day ago' },
-  { id: 4, type: 'achievement', title: 'Earned "Consistent Learner" badge', time: '2 days ago' },
-];
-
-const mockUpcomingTasks = [
-  { id: 1, title: 'Complete Node.js Quiz', due: 'Today', priority: 'high' },
-  { id: 2, title: 'Review Database Concepts', due: 'Tomorrow', priority: 'medium' },
-  { id: 3, title: 'Study Group Meeting - React', due: 'Friday', priority: 'medium' },
-  { id: 4, title: 'Submit Final Project', due: 'Next Week', priority: 'low' },
-];
-
-const mockRecommendations = [
-  { id: 1, type: 'quiz', title: 'Advanced React Patterns', difficulty: 'Hard', estimated: '20 min' },
-  { id: 2, type: 'group', title: 'JavaScript Masters Study Group', members: 24 },
-  { id: 3, type: 'resource', title: 'Async JavaScript Deep Dive', category: 'Video Course' },
-];
+import DashboardService, { DashboardStats } from '../../services/dashboardService';
 
 export const Dashboard: React.FC = () => {
   const { user } = useAuth();
   const [showAIQuiz, setShowAIQuiz] = useState(false);
   const [showStudyAssistant, setShowStudyAssistant] = useState(false);
   const [aiConnectionStatus, setAiConnectionStatus] = useState<'checking' | 'connected' | 'disconnected'>('checking');
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [loading, setLoading] = useState(true);
   const [aiFeatures, setAiFeatures] = useState({
     personalizedRecommendations: [],
     studyInsights: null,
@@ -69,8 +40,21 @@ export const Dashboard: React.FC = () => {
 
   useEffect(() => {
     checkAIConnection();
-    loadAIFeatures();
+    loadDashboardData();
   }, []);
+
+  const loadDashboardData = async () => {
+    try {
+      setLoading(true);
+      const dashboardStats = await DashboardService.getStats();
+      setStats(dashboardStats);
+      loadAIFeatures();
+    } catch (error) {
+      console.error('Failed to load dashboard data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const checkAIConnection = async () => {
     try {
@@ -82,11 +66,10 @@ export const Dashboard: React.FC = () => {
   };
 
   const loadAIFeatures = async () => {
-    if (aiConnectionStatus === 'connected') {
+    if (aiConnectionStatus === 'connected' && stats) {
       try {
-        // Generate personalized recommendations
         const recommendations = await OllamaService.generateMotivationalMessage(
-          'Completed 5 quizzes this week',
+          `Completed ${stats.completedQuizzes} quizzes with ${stats.averageScore}% average`,
           user?.subjects?.[0]?.name || 'General'
         );
         setAiFeatures(prev => ({
@@ -210,6 +193,22 @@ export const Dashboard: React.FC = () => {
     </div>
   );
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (!stats) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-gray-600">Failed to load dashboard data</p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -267,28 +266,26 @@ export const Dashboard: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
           title="Today's Study Time"
-          value={`${mockStats.todayStudyTime} min`}
+          value={`${stats.todayStudyTime} min`}
           icon={ClockIcon}
           color="bg-blue-500"
-          trend="+12% from yesterday"
         />
         <StatCard
           title="Current Streak"
-          value={`${mockStats.currentStreak} days`}
+          value={`${stats.currentStreak} days`}
           icon={FireIcon}
           color="bg-orange-500"
-          trend="Keep it up!"
+          trend={stats.currentStreak > 0 ? "Keep it up!" : undefined}
         />
         <StatCard
           title="Average Score"
-          value={`${mockStats.averageScore}%`}
+          value={`${stats.averageScore}%`}
           icon={TrophyIcon}
           color="bg-yellow-500"
-          trend="+5% this week"
         />
         <StatCard
           title="Study Groups"
-          value={mockStats.studyGroups}
+          value={stats.studyGroups}
           icon={UserGroupIcon}
           color="bg-purple-500"
         />
@@ -304,9 +301,13 @@ export const Dashboard: React.FC = () => {
             </div>
             <div className="p-6">
               <div className="space-y-1">
-                {mockRecentActivity.map((activity) => (
-                  <ActivityItem key={activity.id} activity={activity} />
-                ))}
+                {stats.recentActivity.length > 0 ? (
+                  stats.recentActivity.map((activity) => (
+                    <ActivityItem key={activity.id} activity={activity} />
+                  ))
+                ) : (
+                  <p className="text-center text-gray-500 py-4">No recent activity</p>
+                )}
               </div>
               <div className="mt-4">
                 <Link
@@ -329,9 +330,13 @@ export const Dashboard: React.FC = () => {
             </div>
             <div className="p-6">
               <div className="space-y-1">
-                {mockUpcomingTasks.map((task) => (
-                  <TaskItem key={task.id} task={task} />
-                ))}
+                {stats.upcomingTasks.length > 0 ? (
+                  stats.upcomingTasks.map((task) => (
+                    <TaskItem key={task.id} task={task} />
+                  ))
+                ) : (
+                  <p className="text-center text-gray-500 py-4">No upcoming tasks</p>
+                )}
               </div>
               <div className="mt-4">
                 <Link
@@ -348,20 +353,16 @@ export const Dashboard: React.FC = () => {
       </div>
 
       {/* AI-Powered Recommendations */}
-      {aiConnectionStatus === 'connected' && (
+      {aiConnectionStatus === 'connected' && aiFeatures.motivationalMessage && (
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
           <div className="px-6 py-4 border-b border-gray-200">
             <div className="flex items-center">
               <SparklesIcon className="h-5 w-5 text-purple-600 mr-2" />
-              <h2 className="text-lg font-semibold text-gray-900">AI-Powered Recommendations</h2>
+              <h2 className="text-lg font-semibold text-gray-900">AI Insights</h2>
             </div>
           </div>
           <div className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {mockRecommendations.map((recommendation) => (
-                <RecommendationItem key={recommendation.id} recommendation={recommendation} />
-              ))}
-            </div>
+            <p className="text-gray-700">{aiFeatures.motivationalMessage}</p>
           </div>
         </div>
       )}

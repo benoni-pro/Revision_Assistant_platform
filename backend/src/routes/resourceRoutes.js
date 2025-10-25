@@ -1,21 +1,30 @@
 import express from 'express';
 import axios from 'axios';
 import { protect } from '../middleware/authMiddleware.js';
+import {
+  getResources,
+  getResource,
+  createResource,
+  updateResource,
+  deleteResource,
+  addRating,
+  toggleBookmark,
+  recordDownload
+} from '../controllers/resourceController.js';
 
 const router = express.Router();
 
-// Temporary controller functions
-const getResources = (req, res) => {
-  res.json({ message: 'Get resources - Coming soon!' });
-};
-
-const uploadResource = (req, res) => {
-  res.json({ message: 'Upload resource - Coming soon!' });
-};
-
-// Routes
+// Resource CRUD routes
 router.get('/', protect, getResources);
-router.post('/', protect, uploadResource);
+router.get('/:id', protect, getResource);
+router.post('/', protect, createResource);
+router.put('/:id', protect, updateResource);
+router.delete('/:id', protect, deleteResource);
+
+// Resource actions
+router.post('/:id/ratings', protect, addRating);
+router.post('/:id/bookmark', protect, toggleBookmark);
+router.post('/:id/download', protect, recordDownload);
 
 // RapidAPI: Balancing Studies proxy
 router.get('/balancing-studies', protect, async (req, res) => {
